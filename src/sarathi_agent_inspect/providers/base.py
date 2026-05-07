@@ -21,6 +21,7 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator
 
+    from sarathi_agent_inspect.core.config.settings import SarathiSettings
     from sarathi_agent_inspect.core.types import JsonDict, ModelName, ProviderName
 
 
@@ -83,13 +84,16 @@ class BaseProvider(ABC):
 
     All provider implementations must inherit from this class
     and implement the abstract methods.
-
-    Example:
-        class OllamaProvider(BaseProvider):
-            async def generate(self, prompt, **kwargs):
-                # Implementation here
-                ...
     """
+
+    def __init__(self, settings: SarathiSettings, **kwargs: Any) -> None:
+        """Initialize the provider.
+
+        Args:
+            settings: The framework configuration.
+            **kwargs: Additional provider-specific overrides.
+        """
+        self._settings = settings
 
     @property
     @abstractmethod
@@ -170,7 +174,7 @@ class BaseProvider(ABC):
         Raises:
             ProviderError: If the generation fails.
         """
-        ...  # pragma: no cover
+        yield ""  # pragma: no cover
 
     @abstractmethod
     async def health_check(self) -> bool:
@@ -198,10 +202,11 @@ class BaseProvider(ABC):
         """
 
     async def __aenter__(self) -> BaseProvider:
-        """Async context manager entry — initializes the provider."""
+        """Async context manager entry."""
         await self.initialize()
         return self
 
     async def __aexit__(self, *_: Any) -> None:
-        """Async context manager exit — shuts down the provider."""
+        """Async context manager exit."""
         await self.shutdown()
+
