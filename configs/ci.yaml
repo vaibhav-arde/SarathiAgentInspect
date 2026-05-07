@@ -1,0 +1,23 @@
+# ──────────────────────────────────────────────
+# SarathiAgentInspect — CI Environment Config
+# Overrides default.yaml for CI pipelines
+# ──────────────────────────────────────────────
+
+framework:
+  debug: false
+
+logging:
+  level: "INFO"
+  format: "json"           # Structured for log aggregation
+  include_caller: false
+
+provider:
+  timeout: 60              # Stricter timeout in CI
+
+retry:
+  max_attempts: 2          # Fewer retries in CI
+  max_delay: 30
+
+evaluation:
+  max_workers: 4
+  fail_fast: false         # Run all evaluations to get full results

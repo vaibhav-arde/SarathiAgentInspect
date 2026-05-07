@@ -1,0 +1,92 @@
+# ──────────────────────────────────────────────
+# SarathiAgentInspect — Docker Compose Stack
+# Services:
+#   - sarathi: The evaluation framework
+#   - ollama: Local LLM provider
+#   - langfuse-db: PostgreSQL for Langfuse
+#   - langfuse: Self-hosted Langfuse server
+# ──────────────────────────────────────────────
+
+services:
+  # ── Sarathi Framework ──────────────────────
+  sarathi:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: sarathi-agent-inspect
+    environment:
+      - SARATHI_ENV=local
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - LANGFUSE_BASE_URL=http://langfuse:3000
+    volumes:
+      - ../configs:/app/configs:ro
+      - ../datasets:/app/datasets:ro
+      - ../reports:/app/reports
+    depends_on:
+      ollama:
+        condition: service_started
+    networks:
+      - sarathi-network
+
+  # ── Ollama LLM Provider ────────────────────
+  ollama:
+    image: ollama/ollama:latest
+    container_name: sarathi-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    networks:
+      - sarathi-network
+    deploy:
+      resources:
+        reservations:
+          memory: 8G
+
+  # ── Langfuse PostgreSQL ────────────────────
+  langfuse-db:
+    image: postgres:16-alpine
+    container_name: sarathi-langfuse-db
+    environment:
+      POSTGRES_DB: langfuse
+      POSTGRES_USER: langfuse
+      POSTGRES_PASSWORD: langfuse_password  # Change in production!
+    volumes:
+      - langfuse-db-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - sarathi-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U langfuse"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Langfuse Server ────────────────────────
+  langfuse:
+    image: langfuse/langfuse:latest
+    container_name: sarathi-langfuse
+    environment:
+      DATABASE_URL: postgresql://langfuse:langfuse_password@langfuse-db:5432/langfuse
+      NEXTAUTH_SECRET: sarathi-langfuse-secret-change-me  # Change in production!
+      NEXTAUTH_URL: http://localhost:3000
+      SALT: sarathi-salt-change-me  # Change in production!
+      TELEMETRY_ENABLED: "false"
+    ports:
+      - "3000:3000"
+    depends_on:
+      langfuse-db:
+        condition: service_healthy
+    networks:
+      - sarathi-network
+
+# ── Volumes ──────────────────────────────────
+volumes:
+  ollama-data:
+  langfuse-db-data:
+
+# ── Networks ─────────────────────────────────
+networks:
+  sarathi-network:
+    driver: bridge

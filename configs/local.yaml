@@ -1,0 +1,19 @@
+# ──────────────────────────────────────────────
+# SarathiAgentInspect — Local Development Config
+# Overrides default.yaml for local development
+# ──────────────────────────────────────────────
+
+framework:
+  debug: true
+
+logging:
+  level: "DEBUG"
+  format: "console"       # Human-readable colored output
+  include_caller: true
+
+provider:
+  timeout: 180             # More generous timeout for local dev
+
+evaluation:
+  max_workers: 2           # Fewer workers locally
+  fail_fast: true          # Fail fast during development
