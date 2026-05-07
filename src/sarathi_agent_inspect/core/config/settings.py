@@ -51,6 +51,37 @@ class OllamaProviderSettings(BaseModel):
     model: str = Field(default="gemma4:31b-cloud", description="Default Ollama model")
 
 
+class OpenAIProviderSettings(BaseModel):
+    """OpenAI-specific provider configuration."""
+
+    api_key: str = Field(default="", description="OpenAI API key")
+    model: str = Field(default="gpt-4o", description="Default OpenAI model")
+    base_url: str = Field(default="", description="Optional base URL for OpenAI-compatible APIs")
+
+
+class GeminiProviderSettings(BaseModel):
+    """Gemini-specific provider configuration."""
+
+    api_key: str = Field(default="", description="Google Gemini API key")
+    model: str = Field(default="gemini-2.5-flash", description="Default Gemini model")
+
+
+class AnthropicProviderSettings(BaseModel):
+    """Anthropic-specific provider configuration."""
+
+    api_key: str = Field(default="", description="Anthropic API key")
+    model: str = Field(default="claude-sonnet-4-20250514", description="Default Anthropic model")
+
+
+class AzureOpenAIProviderSettings(BaseModel):
+    """Azure OpenAI-specific provider configuration."""
+
+    api_key: str = Field(default="", description="Azure OpenAI API key")
+    endpoint: str = Field(default="", description="Azure OpenAI endpoint")
+    deployment: str = Field(default="", description="Azure OpenAI deployment name")
+    api_version: str = Field(default="2024-02-01", description="Azure OpenAI API version")
+
+
 class ProviderSettings(BaseModel):
     """LLM provider configuration."""
 
@@ -58,6 +89,10 @@ class ProviderSettings(BaseModel):
     timeout: int = Field(default=120, ge=1, description="Request timeout in seconds")
     max_retries: int = Field(default=3, ge=0, description="Max retries for provider calls")
     ollama: OllamaProviderSettings = Field(default_factory=OllamaProviderSettings)
+    openai: OpenAIProviderSettings = Field(default_factory=OpenAIProviderSettings)
+    gemini: GeminiProviderSettings = Field(default_factory=GeminiProviderSettings)
+    anthropic: AnthropicProviderSettings = Field(default_factory=AnthropicProviderSettings)
+    azure_openai: AzureOpenAIProviderSettings = Field(default_factory=AzureOpenAIProviderSettings)
 
 
 class JudgeSettings(BaseModel):

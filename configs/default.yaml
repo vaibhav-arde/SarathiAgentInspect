@@ -24,6 +24,25 @@ provider:
     base_url: "http://localhost:11434"
     model: "gemma4:31b-cloud"
 
+  openai:
+    api_key: ""
+    model: "gpt-4o"
+    base_url: ""
+
+  gemini:
+    api_key: ""
+    model: "gemini-2.5-flash"
+
+  anthropic:
+    api_key: ""
+    model: "claude-sonnet-4-20250514"
+
+  azure_openai:
+    api_key: ""
+    endpoint: ""
+    deployment: ""
+    api_version: "2024-02-01"
+
 judge:
   provider: "ollama"
   model: "gemma4:31b-cloud"
