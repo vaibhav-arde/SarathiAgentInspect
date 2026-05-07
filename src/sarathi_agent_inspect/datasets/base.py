@@ -20,6 +20,8 @@ if TYPE_CHECKING:
     from collections.abc import Iterator
     from pathlib import Path
 
+    from pydantic import BaseModel
+
     from sarathi_agent_inspect.core.types import DatasetRecord, JsonDict
 
 
@@ -36,6 +38,7 @@ class DatasetMetadata:
         tags: Classification tags (e.g., 'rag', 'chatbot', 'safety').
         source_path: Original source path or URL.
         schema_version: Schema version for the dataset format.
+        dvc_hash: Optional DVC commit hash for reproducibility tracking.
         extra: Additional metadata.
     """
 
@@ -47,6 +50,7 @@ class DatasetMetadata:
     tags: list[str] = field(default_factory=list)
     source_path: str = ""
     schema_version: str = "1.0.0"
+    dvc_hash: str | None = None
     extra: JsonDict = field(default_factory=dict)
 
 
@@ -75,6 +79,14 @@ class BaseDataset(ABC):
     All dataset implementations must inherit from this class
     and implement the abstract methods.
     """
+
+    def __init__(self, schema_class: type[BaseModel] | None = None) -> None:
+        """Initialize the dataset loader.
+
+        Args:
+            schema_class: Optional Pydantic model class for record validation.
+        """
+        self.schema_class = schema_class
 
     @property
     @abstractmethod
