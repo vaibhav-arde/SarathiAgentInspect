@@ -216,3 +216,18 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# ──────────────────────────────────────────────
+# SarathiAgentInspect specific
+# ──────────────────────────────────────────────
+.env
+.env.local
+.env.*.local
+reports/
+.cache/
+logs/
+datasets/*.cache
+*.sarathi-cache
+
+# Gemini / AI tooling
+.gemini/

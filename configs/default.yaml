@@ -1,0 +1,56 @@
+# ──────────────────────────────────────────────
+# SarathiAgentInspect — Default Configuration
+# Base configuration loaded for ALL environments
+# Environment-specific files override these values
+# ──────────────────────────────────────────────
+
+framework:
+  name: "SarathiAgentInspect"
+  version: "0.1.0"
+  debug: false
+
+logging:
+  level: "INFO"
+  format: "json"            # json | console
+  include_timestamp: true
+  include_caller: false
+
+provider:
+  default: "ollama"
+  timeout: 120
+  max_retries: 3
+
+  ollama:
+    base_url: "http://localhost:11434"
+    model: "gemma4:31b-cloud"
+
+judge:
+  provider: "ollama"
+  model: "gemma4:31b-cloud"
+  timeout: 180
+
+retry:
+  max_attempts: 3
+  backoff_multiplier: 2.0
+  max_delay: 60
+  jitter: true
+  retry_on:
+    - "rate_limit"
+    - "timeout"
+    - "connection_error"
+
+evaluation:
+  default_threshold: 0.7
+  max_workers: 4
+  batch_size: 10
+  fail_fast: false
+
+datasets:
+  base_path: "./datasets"
+  cache_enabled: true
+  cache_path: "./.cache/datasets"
+
+reporting:
+  output_path: "./reports"
+  formats:
+    - "json"

@@ -1,0 +1,27 @@
+# ──────────────────────────────────────────────
+# SarathiAgentInspect — Production Config
+# Overrides default.yaml for production deployments
+# NOTE: Secrets should NEVER be in this file
+#       Use environment variables or secret managers
+# ──────────────────────────────────────────────
+
+framework:
+  debug: false
+
+logging:
+  level: "WARNING"
+  format: "json"
+  include_caller: false
+
+provider:
+  timeout: 90
+
+retry:
+  max_attempts: 5          # More retries in production
+  backoff_multiplier: 3.0
+  max_delay: 120
+
+evaluation:
+  max_workers: 8           # More workers in production
+  batch_size: 50
+  fail_fast: false
