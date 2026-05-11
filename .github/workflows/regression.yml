@@ -2,7 +2,8 @@ name: Regression Pipeline
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened]
+    branches: ["main"]
+  push:
     branches: ["main"]
 
 jobs:
@@ -11,8 +12,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Need full history for regression check
-          
+          fetch-depth: 0
+
+      - name: Restore Regression State
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            .sarathi/history.jsonl
+            .sarathi/baselines
+          key: sarathi-regression-${{ runner.os }}-${{ github.ref_name }}-${{ github.run_id }}
+          restore-keys: |
+            sarathi-regression-${{ runner.os }}-${{ github.ref_name }}-
+            sarathi-regression-${{ runner.os }}-main-
+
       - uses: astral-sh/setup-uv@v4
         with:
           enable-cache: true
@@ -30,14 +42,35 @@ jobs:
           SARATHI_JUDGE_MODEL: ${{ vars.JUDGE_MODEL || 'gemma4:31b-cloud' }}
           
       - name: Enforce Quality Gates
+        if: github.event_name == 'pull_request'
         run: |
-          uv run python ci/regression_gate.py --report report.json
+          uv run python ci/regression_gate.py --action check --report report.json --branch main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Snapshot New Baseline
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          uv run python ci/regression_gate.py --action snapshot --report report.json --branch main --label "main-stable-${{ github.sha }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Save Regression State
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            .sarathi/history.jsonl
+            .sarathi/baselines
+          key: sarathi-regression-${{ runner.os }}-${{ github.ref_name }}-${{ github.run_id }}
           
       - name: Upload Artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: evaluation-reports
-          path: reports/
+          path: |
+            report.json
+            .sarathi/history.jsonl
+            .sarathi/baselines
+            reports/

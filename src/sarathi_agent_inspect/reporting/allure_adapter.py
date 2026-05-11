@@ -10,6 +10,8 @@ import json
 import logging
 from typing import Any
 
+from sarathi_agent_inspect.core.sanitizer import InputSanitizer
+
 try:
     import allure
 except ImportError:
@@ -29,7 +31,13 @@ class AllureAdapter:
 
         try:
             name = getattr(trace, "trace_id", "Evaluation Trace")
-            content = json.dumps(trace if isinstance(trace, dict) else vars(trace), indent=2, default=str)
+            if isinstance(trace, dict):
+                payload = trace
+            elif hasattr(trace, "to_dict"):
+                payload = trace.to_dict()
+            else:
+                payload = vars(trace)
+            content = json.dumps(InputSanitizer.sanitize_for_export(payload), indent=2, default=str)
             allure.attach(
                 content,
                 name=f"Sarathi Trace: {name}",
@@ -47,13 +55,13 @@ class AllureAdapter:
         for metric in metrics:
             with allure.step(f"Metric: {metric.metric_name} (Score: {metric.score})"):
                 allure.attach(
-                    metric.reason,
+                    InputSanitizer.sanitize(metric.reason),
                     name="Judge Reasoning",
                     attachment_type=allure.attachment_type.TEXT,
                 )
                 if hasattr(metric, "metadata") and metric.metadata:
                     allure.attach(
-                        json.dumps(metric.metadata, indent=2, default=str),
+                        json.dumps(InputSanitizer.sanitize_for_export(metric.metadata), indent=2, default=str),
                         name="Metric Metadata",
                         attachment_type=allure.attachment_type.JSON,
                     )

@@ -27,7 +27,9 @@ def test_evaluation_session_manifest(tmp_path: Any) -> None:
 
     manifest_path = session.export_manifest(tmp_path)
     assert manifest_path.exists()
-    assert "test_65" in manifest_path.read_text()
+    manifest = manifest_path.read_text()
+    assert "test_65" in manifest
+    assert '"run_id": "test_65"' in manifest
 
 
 @pytest.mark.asyncio

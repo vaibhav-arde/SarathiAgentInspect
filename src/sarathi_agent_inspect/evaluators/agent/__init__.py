@@ -25,6 +25,7 @@ from sarathi_agent_inspect.evaluators.agent.trace import (
 from sarathi_agent_inspect.evaluators.agent.workflow import (
     MultiAgentEvaluator,
     ReplayEngine,
+    WorkflowEvaluationResult,
     WorkflowEvaluator,
 )
 
@@ -44,5 +45,6 @@ __all__ = [
     "ToolEvaluator",
     "ToolTracker",
     "TraceScorer",
+    "WorkflowEvaluationResult",
     "WorkflowEvaluator",
 ]

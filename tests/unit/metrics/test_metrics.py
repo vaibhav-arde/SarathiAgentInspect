@@ -220,3 +220,5 @@ def test_metric_observer(tmp_path: Any) -> None:
     assert data["test_id"] == "test_123"
     assert len(data["metrics"]) == 2
     assert data["metrics"][0]["metric_name"] == "m1"
+    assert data["observability"]["run_id"] == "run_123"
+    assert data["observability"]["test_id"] == "test_123"

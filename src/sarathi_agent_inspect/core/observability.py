@@ -12,6 +12,51 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from sarathi_agent_inspect.core.sanitizer import InputSanitizer
+
+
+@dataclass(frozen=True)
+class ObservabilityContext:
+    """Canonical identifiers shared across traces, metrics, and reports."""
+
+    run_id: str
+    test_id: str | None = None
+    trace_id: str | None = None
+    session_id: str | None = None
+
+    def to_dict(self) -> dict[str, str]:
+        """Serialize non-empty identifiers."""
+        return {
+            key: value
+            for key, value in {
+                "run_id": self.run_id,
+                "test_id": self.test_id,
+                "trace_id": self.trace_id,
+                "session_id": self.session_id,
+            }.items()
+            if value
+        }
+
+
+def merge_observability_metadata(
+    metadata: dict[str, Any] | None,
+    *,
+    run_id: str,
+    test_id: str | None = None,
+    trace_id: str | None = None,
+    session_id: str | None = None,
+) -> dict[str, Any]:
+    """Attach a normalized observability block to arbitrary metadata."""
+    merged = dict(metadata or {})
+    context = ObservabilityContext(
+        run_id=run_id,
+        test_id=test_id,
+        trace_id=trace_id,
+        session_id=session_id,
+    )
+    merged["observability"] = context.to_dict()
+    return merged
+
 
 @dataclass
 class BaseTrace:
@@ -19,6 +64,8 @@ class BaseTrace:
 
     trace_id: str
     input_text: str
+    run_id: str | None = None
+    test_id: str | None = None
     metadata: dict[str, Any] = field(default_factory=dict)
     start_time: datetime = field(default_factory=lambda: datetime.now(UTC))
     end_time: datetime | None = None
@@ -33,7 +80,15 @@ class BaseTrace:
 
     def to_dict(self) -> dict[str, Any]:
         """Convert trace to dictionary for persistence."""
-        return asdict(self)
+        payload = asdict(self)
+        run_id = self.run_id or self.trace_id
+        payload["metadata"] = merge_observability_metadata(
+            self.metadata,
+            run_id=run_id,
+            test_id=self.test_id,
+            trace_id=self.trace_id,
+        )
+        return InputSanitizer.sanitize_for_export(payload)
 
 
 class EvaluationSession:
@@ -45,19 +100,38 @@ class EvaluationSession:
 
     def __init__(self, session_id: str, environment: str = "local") -> None:
         self.session_id = session_id
+        self.run_id = session_id
         self.environment = environment
         self.start_time = datetime.now(UTC)
         self.results: list[dict[str, Any]] = []
         self.total_cost_usd: float = 0.0
-        self.metadata: dict[str, Any] = {
+        self.metadata: dict[str, Any] = merge_observability_metadata(
+            {
             "environment": environment,
             "git_commit": "unknown",  # Can be injected
             "user": "vaibhav-arde",
-        }
+            },
+            run_id=self.run_id,
+            session_id=self.session_id,
+        )
 
-    def record_result(self, result: dict[str, Any], cost: float = 0.0) -> None:
+    def record_result(
+        self,
+        result: dict[str, Any],
+        cost: float = 0.0,
+        test_id: str | None = None,
+        trace_id: str | None = None,
+    ) -> None:
         """Add a result to the session."""
-        self.results.append(result)
+        normalized = dict(result)
+        if "observability" not in normalized:
+            normalized["observability"] = ObservabilityContext(
+                run_id=self.run_id,
+                test_id=test_id or str(result.get("test_id", "")) or None,
+                trace_id=trace_id or str(result.get("trace_id", "")) or None,
+                session_id=self.session_id,
+            ).to_dict()
+        self.results.append(normalized)
         self.total_cost_usd += cost
 
     def export_manifest(self, output_dir: Path | str) -> Path:
@@ -77,5 +151,5 @@ class EvaluationSession:
 
         path.parent.mkdir(parents=True, exist_ok=True)
         with open(path, "w") as f:
-            json.dump(manifest, f, indent=2)
+            json.dump(InputSanitizer.sanitize_for_export(manifest), f, indent=2)
         return path

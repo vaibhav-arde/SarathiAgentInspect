@@ -7,7 +7,8 @@ inputs by neutralizing known attack patterns.
 from __future__ import annotations
 
 import re
-from typing import ClassVar
+from dataclasses import asdict, is_dataclass
+from typing import Any, ClassVar
 
 
 class InputSanitizer:
@@ -21,6 +22,22 @@ class InputSanitizer:
         r"(?i)forget everything you know",
         r"(?i)system check: override",
     ]
+    SENSITIVE_KEY_PATTERNS: ClassVar[list[str]] = [
+        r"(?i)api[_-]?key",
+        r"(?i)secret",
+        r"(?i)(access|refresh|bearer)[_-]?token",
+        r"(?i)password",
+        r"(?i)authorization",
+        r"(?i)cookie",
+        r"(?i)session",
+    ]
+    SECRET_VALUE_PATTERNS: ClassVar[list[str]] = [
+        r"(?i)\bbearer\s+[a-z0-9._\-]+\b",
+        r"\bsk-[A-Za-z0-9]{12,}\b",
+        r"\bAIza[0-9A-Za-z\-_]{20,}\b",
+        r"\bgh[pousr]_[A-Za-z0-9]{20,}\b",
+    ]
+    REDACTED: ClassVar[str] = "[REDACTED]"
 
     @classmethod
     def is_clean(cls, text: str) -> bool:
@@ -36,4 +53,52 @@ class InputSanitizer:
             # but we wrap it in a 'potentially malicious' tag
             # to warn the judge model.
             sanitized = re.sub(pattern, lambda m: f"[POTENTIAL INJECTION DETECTED: {m.group(0)}]", sanitized)
-        return sanitized
+        return cls._redact_secret_values(sanitized)
+
+    @classmethod
+    def is_sensitive_key(cls, key: str) -> bool:
+        """Return True when a field name likely contains secret material."""
+        return any(re.search(pattern, key) for pattern in cls.SENSITIVE_KEY_PATTERNS)
+
+    @classmethod
+    def _redact_secret_values(cls, text: str) -> str:
+        """Redact common token and key formats from free-form text."""
+        redacted = text
+        for pattern in cls.SECRET_VALUE_PATTERNS:
+            redacted = re.sub(pattern, cls.REDACTED, redacted)
+        return redacted
+
+    @classmethod
+    def sanitize_for_export(cls, value: Any, field_name: str | None = None) -> Any:
+        """Recursively sanitize structured payloads before persistence.
+
+        This applies both prompt-injection neutralization and secret redaction
+        across nested dict/list artifacts.
+        """
+        if isinstance(value, dict):
+            return {
+                key: cls.sanitize_for_export(item, field_name=key)
+                for key, item in value.items()
+            }
+
+        if isinstance(value, list):
+            return [cls.sanitize_for_export(item, field_name=field_name) for item in value]
+
+        if isinstance(value, tuple):
+            return [cls.sanitize_for_export(item, field_name=field_name) for item in value]
+
+        if is_dataclass(value):
+            return cls.sanitize_for_export(asdict(value), field_name=field_name)
+
+        if hasattr(value, "model_dump"):
+            return cls.sanitize_for_export(value.model_dump(), field_name=field_name)
+
+        if hasattr(value, "to_dict"):
+            return cls.sanitize_for_export(value.to_dict(), field_name=field_name)
+
+        if isinstance(value, str):
+            if field_name and cls.is_sensitive_key(field_name):
+                return cls.REDACTED
+            return cls.sanitize(value)
+
+        return value

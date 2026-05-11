@@ -21,7 +21,12 @@ class GitHubPRCommenter:
     def __init__(self, token: str | None = None, repo: str | None = None, pr_number: int | None = None) -> None:
         self.token = token or os.getenv("GITHUB_TOKEN")
         self.repo = repo or os.getenv("GITHUB_REPOSITORY")
-        self.pr_number = pr_number or int(os.getenv("GITHUB_PR_NUMBER", "0"))
+        self.pr_number = pr_number or self._resolve_pr_number()
+
+    @staticmethod
+    def _resolve_pr_number() -> int:
+        raw = os.getenv("GITHUB_PR_NUMBER", "").strip()
+        return int(raw) if raw.isdigit() else 0
 
     async def post_summary(self, summary: Any, trend: dict[str, Any] | None = None) -> bool:
         """Post the evaluation summary as a comment on the PR."""
@@ -58,7 +63,7 @@ class GitHubPRCommenter:
 *Environment: `{summary.metadata.environment}` | Run ID: `{summary.metadata.run_id}`*
 """
 
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(timeout=10.0) as client:
             try:
                 response = await client.post(url, json={"body": body.strip()}, headers=headers)
                 response.raise_for_status()

@@ -5,6 +5,8 @@ from sarathi_agent_inspect.datasets.cache import DatasetCache
 from sarathi_agent_inspect.datasets.loaders import CSVLoader, JSONLoader, ParquetLoader, TraceLoader
 from sarathi_agent_inspect.datasets.pipeline import DatasetPipeline
 from sarathi_agent_inspect.datasets.regression import (
+    BaselineSnapshotInfo,
+    RegressionBaselineStore,
     RegressionComparator,
     RegressionReport,
     RegressionResult,
@@ -27,6 +29,7 @@ __all__ = [
     "EDGE_CASE_TEMPLATES",
     "AIAgentRecord",
     "BaseDataset",
+    "BaselineSnapshotInfo",
     "BenchmarkRecord",
     "CSVLoader",
     "ChatbotRecord",
@@ -38,6 +41,7 @@ __all__ = [
     "MultiTurnRecord",
     "ParquetLoader",
     "RAGRecord",
+    "RegressionBaselineStore",
     "RegressionComparator",
     "RegressionRecord",
     "RegressionReport",

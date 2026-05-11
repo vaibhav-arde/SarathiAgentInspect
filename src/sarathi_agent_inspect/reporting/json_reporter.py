@@ -10,6 +10,8 @@ import json
 from pathlib import Path
 from typing import Any
 
+from sarathi_agent_inspect.core.observability import ObservabilityContext
+from sarathi_agent_inspect.core.sanitizer import InputSanitizer
 from sarathi_agent_inspect.reporting.base import BaseReporter, EvaluationSummary
 
 
@@ -22,25 +24,16 @@ class JSONReporter(BaseReporter):
     def generate(self, results: list[Any], summary: EvaluationSummary) -> Path:
         """Generate a JSON report file."""
         report_data = {
-            "summary": {
-                "total_records": summary.total_records,
-                "passed_count": summary.passed_count,
-                "failed_count": summary.failed_count,
-                "pass_rate": summary.pass_rate,
-                "average_score": summary.average_score,
-                "metadata": {
-                    "run_id": summary.metadata.run_id,
-                    "timestamp": summary.metadata.timestamp,
-                    "environment": summary.metadata.environment,
-                    "total_cost_usd": summary.metadata.total_cost_usd,
-                    "total_latency_ms": summary.metadata.total_latency_ms,
-                },
-            },
-            "results": results,
+            "observability": ObservabilityContext(
+                run_id=summary.metadata.run_id,
+                trace_id=summary.metadata.trace_id,
+            ).to_dict(),
+            "summary": summary.model_dump(),
+            "results": InputSanitizer.sanitize_for_export(results),
         }
 
         self.output_path.parent.mkdir(parents=True, exist_ok=True)
         with open(self.output_path, "w") as f:
-            json.dump(report_data, f, indent=2, default=str)
+            json.dump(InputSanitizer.sanitize_for_export(report_data), f, indent=2, default=str)
 
         return self.output_path

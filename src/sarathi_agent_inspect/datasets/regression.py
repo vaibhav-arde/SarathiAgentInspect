@@ -19,14 +19,19 @@ from __future__ import annotations
 
 import json
 import time
+from datetime import datetime
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
+from uuid import uuid4
+
+from sarathi_agent_inspect.core.sanitizer import InputSanitizer
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
     from sarathi_agent_inspect.core.types import DatasetRecord
+    from sarathi_agent_inspect.reporting.base import EvaluationSummary
 
 
 @dataclass
@@ -183,7 +188,7 @@ class RegressionSnapshot:
             "records": self._records,
         }
         with open(output_path, "w", encoding="utf-8") as f:
-            json.dump(payload, f, indent=2, default=str)
+            json.dump(InputSanitizer.sanitize_for_export(payload), f, indent=2, default=str)
 
     @classmethod
     def load(cls, path: str | Path) -> RegressionSnapshot:
@@ -212,6 +217,17 @@ class RegressionSnapshot:
         snapshot = cls(version=data["version"])
         snapshot._timestamp = data.get("timestamp", time.time())
         snapshot._records = data["records"]
+        return snapshot
+
+    @classmethod
+    def from_summary(cls, summary: EvaluationSummary, version: str = "1.0.0") -> RegressionSnapshot:
+        """Create a snapshot from an existing EvaluationSummary.
+
+        Note: This only populates metadata and aggregates. Detailed per-record
+        outputs must be added manually since EvaluationSummary is an aggregate.
+        """
+        snapshot = cls(version=version)
+        snapshot._timestamp = datetime.fromisoformat(summary.metadata.timestamp).timestamp()
         return snapshot
 
     def __iter__(self) -> Iterator[DatasetRecord]:
@@ -305,3 +321,100 @@ class RegressionComparator:
                 report.failed_count += 1
 
         return report
+
+
+@dataclass(frozen=True)
+class BaselineSnapshotInfo:
+    """Metadata describing a stored regression baseline snapshot."""
+
+    snapshot_id: str
+    version: str
+    branch: str
+    path: str
+    created_at: float
+    label: str | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
+
+
+class RegressionBaselineStore:
+    """Versioned filesystem-backed baseline storage.
+
+    Stores immutable snapshots per branch and maintains a manifest pointing
+    to the latest baseline, giving CI and local workflows a stable place to
+    resolve regression baselines.
+    """
+
+    def __init__(self, base_dir: str | Path = ".sarathi/baselines", branch: str = "main") -> None:
+        self.base_dir = Path(base_dir)
+        self.branch = self._sanitize_branch(branch)
+        self.branch_dir = self.base_dir / self.branch
+        self.branch_dir.mkdir(parents=True, exist_ok=True)
+
+    @staticmethod
+    def _sanitize_branch(branch: str) -> str:
+        return "".join(ch if ch.isalnum() or ch in {"-", "_"} else "-" for ch in branch).strip("-") or "main"
+
+    @property
+    def manifest_path(self) -> Path:
+        return self.branch_dir / "manifest.json"
+
+    def _load_manifest(self) -> dict[str, Any]:
+        if not self.manifest_path.exists():
+            return {"branch": self.branch, "latest": None, "snapshots": []}
+        with self.manifest_path.open(encoding="utf-8") as file_obj:
+            return json.load(file_obj)
+
+    def _save_manifest(self, manifest: dict[str, Any]) -> None:
+        self.branch_dir.mkdir(parents=True, exist_ok=True)
+        with self.manifest_path.open("w", encoding="utf-8") as file_obj:
+            json.dump(manifest, file_obj, indent=2)
+
+    def save_snapshot(
+        self,
+        snapshot: RegressionSnapshot,
+        *,
+        label: str | None = None,
+        metadata: dict[str, Any] | None = None,
+    ) -> BaselineSnapshotInfo:
+        """Persist a snapshot and update the branch manifest."""
+        created_at = time.time()
+        snapshot_id = f"{int(created_at)}-{uuid4().hex[:8]}"
+        file_name = f"{snapshot_id}.json"
+        path = self.branch_dir / file_name
+        snapshot.save(path)
+
+        info = BaselineSnapshotInfo(
+            snapshot_id=snapshot_id,
+            version=snapshot.version,
+            branch=self.branch,
+            path=str(path),
+            created_at=created_at,
+            label=label,
+            metadata=metadata or {},
+        )
+
+        manifest = self._load_manifest()
+        manifest["latest"] = snapshot_id
+        manifest["snapshots"].append(info.__dict__)
+        self._save_manifest(InputSanitizer.sanitize_for_export(manifest))
+        return info
+
+    def list_snapshots(self) -> list[BaselineSnapshotInfo]:
+        """Return stored snapshot metadata for the current branch."""
+        manifest = self._load_manifest()
+        return [BaselineSnapshotInfo(**entry) for entry in manifest.get("snapshots", [])]
+
+    def load_snapshot(self, snapshot_id: str) -> RegressionSnapshot:
+        """Load a specific snapshot by identifier."""
+        for info in self.list_snapshots():
+            if info.snapshot_id == snapshot_id:
+                return RegressionSnapshot.load(info.path)
+        raise FileNotFoundError(f"Baseline snapshot not found: {snapshot_id}")
+
+    def load_latest(self) -> RegressionSnapshot | None:
+        """Load the most recently saved snapshot for the branch."""
+        manifest = self._load_manifest()
+        latest_id = manifest.get("latest")
+        if not latest_id:
+            return None
+        return self.load_snapshot(latest_id)

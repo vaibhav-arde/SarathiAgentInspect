@@ -6,17 +6,14 @@ enterprise messaging platforms.
 
 from __future__ import annotations
 
+import asyncio
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 try:
     from slack_sdk import WebClient
-    from slack_sdk.errors import SlackApiError
 except ImportError:
     WebClient = None  # type: ignore
-    SlackApiError = None  # type: ignore
-
-from typing import TYPE_CHECKING
 
 import httpx
 
@@ -25,6 +22,29 @@ if TYPE_CHECKING:
 from sarathi_agent_inspect.reporting.notifications_registry import BaseNotifier, NotifierRegistry
 
 logger = logging.getLogger(__name__)
+
+
+def _schedule_background_task(coro: Any) -> None:
+    """Run a coroutine safely from sync code.
+
+    If we're already inside an event loop, schedule the work in the background
+    instead of raising from asyncio.run().
+    """
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        asyncio.run(coro)
+        return
+
+    task = loop.create_task(coro)
+
+    def _log_task_error(completed_task: asyncio.Task[Any]) -> None:
+        try:
+            completed_task.result()
+        except Exception as exc:
+            logger.error(f"Background notification task failed: {exc}")
+
+    task.add_done_callback(_log_task_error)
 
 
 @NotifierRegistry.register("slack")
@@ -83,12 +103,23 @@ class TeamsNotifier(BaseNotifier):
 
     def send_summary(self, summary: EvaluationSummary, trend: dict[str, Any] | None = None) -> None:
         """Send a message to Teams (blocking wrapper for adaptive cards)."""
-        import asyncio
+        _schedule_background_task(self._send_summary_async(summary, trend))
 
-        asyncio.run(self._send_summary_async(summary))
-
-    async def _send_summary_async(self, summary: EvaluationSummary) -> None:
+    async def _send_summary_async(
+        self,
+        summary: EvaluationSummary,
+        trend: dict[str, Any] | None = None,
+    ) -> None:
         """Send a message to Teams."""
+        trend_facts: list[dict[str, str]] = []
+        if trend:
+            trend_facts.append(
+                {
+                    "title": "Trend",
+                    "value": f"{trend.get('trend_direction', 'flat')} {trend.get('pass_rate_delta', 0) * 100:.1f}%",
+                }
+            )
+
         payload = {
             "type": "message",
             "attachments": [
@@ -114,6 +145,7 @@ class TeamsNotifier(BaseNotifier):
                                     {"title": "Total Records", "value": str(summary.total_records)},
                                     {"title": "Cost", "value": f"${summary.metadata.total_cost_usd:.4f}"},
                                     {"title": "Environment", "value": summary.metadata.environment},
+                                    *trend_facts,
                                 ],
                             },
                         ],
@@ -124,7 +156,7 @@ class TeamsNotifier(BaseNotifier):
             ],
         }
 
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(timeout=10.0) as client:
             try:
                 response = await client.post(self.webhook_url, json=payload)
                 response.raise_for_status()

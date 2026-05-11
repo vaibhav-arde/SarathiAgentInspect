@@ -30,6 +30,7 @@ class MetricExecutor:
         retry_delay: float = 1.0,
         concurrency: int = 10,
         rpm: int = 60,
+        rate_limit_scope: str | None = None,
     ) -> None:
         """Initialize the metric executor.
 
@@ -41,7 +42,11 @@ class MetricExecutor:
         """
         self.max_retries = max_retries
         self.retry_delay = retry_delay
-        self.concurrency_manager = ConcurrencyManager(max_concurrent=concurrency, rpm=rpm)
+        self.concurrency_manager = ConcurrencyManager(
+            max_concurrent=concurrency,
+            rpm=rpm,
+            scope=rate_limit_scope,
+        )
 
     async def execute_metric(
         self,
@@ -56,7 +61,7 @@ class MetricExecutor:
         **kwargs: Any,
     ) -> MetricResult:
         """Execute a single metric with retries and normalization."""
-        async with await self.concurrency_manager.throttle():
+        async with self.concurrency_manager.throttle():
             attempt = 0
             while attempt <= self.max_retries:
                 try:

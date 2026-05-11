@@ -6,6 +6,7 @@ from typing import Any
 import pytest
 
 from sarathi_agent_inspect.datasets.regression import (
+    RegressionBaselineStore,
     RegressionComparator,
     RegressionReport,
     RegressionSnapshot,
@@ -177,3 +178,21 @@ def test_report_empty() -> None:
     report = RegressionReport()
     assert report.overall_passed is True
     assert report.pass_rate == 100.0
+
+
+def test_baseline_store_save_and_load_latest(tmp_path: Any) -> None:
+    """Test versioned baseline storage and latest snapshot lookup."""
+    snapshot = RegressionSnapshot(version="2026.05.11")
+    snapshot.add_record("t1", score=0.91, output="Answer A")
+
+    store = RegressionBaselineStore(base_dir=tmp_path / "baselines", branch="feature/test")
+    info = store.save_snapshot(snapshot, label="nightly-main")
+
+    assert info.branch == "feature-test"
+    assert len(store.list_snapshots()) == 1
+
+    latest = store.load_latest()
+    assert latest is not None
+    record = latest.get_record("t1")
+    assert record is not None
+    assert record["score"] == 0.91

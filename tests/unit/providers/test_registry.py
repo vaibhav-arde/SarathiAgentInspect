@@ -6,6 +6,7 @@ from typing import Any
 import pytest
 from pydantic import BaseModel
 
+from sarathi_agent_inspect.core.config.settings import SarathiSettings
 from sarathi_agent_inspect.core.exceptions.base import ConfigurationError
 from sarathi_agent_inspect.providers.base import BaseProvider, ModelInfo, ProviderResponse
 from sarathi_agent_inspect.providers.registry import ProviderFactory, ProviderRegistry, register_provider
@@ -124,3 +125,20 @@ def test_factory_override(mock_settings: Any) -> None:
     provider = ProviderFactory.create(settings=mock_settings, provider_name="mock2")
     assert isinstance(provider, MockProvider2)
     assert provider.provider_name == "mock2"
+
+
+def test_factory_rejects_unready_provider() -> None:
+    """Stub providers should fail fast unless explicitly allowed."""
+    settings = SarathiSettings()
+    settings.provider.default = "anthropic"
+
+    with pytest.raises(ConfigurationError, match="not ready for use"):
+        ProviderFactory.create(settings=settings)
+
+
+def test_factory_can_opt_into_unready_provider() -> None:
+    settings = SarathiSettings()
+    settings.provider.default = "anthropic"
+
+    provider = ProviderFactory.create(settings=settings, allow_unavailable=True)
+    assert provider.provider_name == "anthropic"

@@ -14,7 +14,13 @@ from sarathi_agent_inspect.reporting.json_reporter import JSONReporter
 
 @pytest.fixture
 def sample_summary() -> EvaluationSummary:
-    metadata = ReportMetadata(run_id="run_123", total_cost_usd=0.05, total_latency_ms=1200.0)
+    metadata = ReportMetadata(
+        run_id="run_123",
+        total_cost_usd=0.05,
+        total_latency_ms=1200.0,
+        trace_id="trace_123",
+        test_ids=["t1", "t2"],
+    )
     return EvaluationSummary(
         total_records=10,
         passed_count=8,
@@ -28,7 +34,14 @@ def sample_summary() -> EvaluationSummary:
 @pytest.fixture
 def sample_results() -> list[dict[str, Any]]:
     return [
-        {"test_id": "t1", "score": 1.0, "passed": True, "latency": 100.0, "cost": 0.001},
+        {
+            "test_id": "t1",
+            "score": 1.0,
+            "passed": True,
+            "latency": 100.0,
+            "cost": 0.001,
+            "api_key": "sk-secretvalue123456",
+        },
         {"test_id": "t2", "score": 0.0, "passed": False, "latency": 200.0, "cost": 0.002, "reason": "Failed test"},
     ]
 
@@ -44,6 +57,9 @@ def test_json_reporter(tmp_path: Path, sample_results: list[dict[str, Any]], sam
         data = json.load(f)
         assert data["summary"]["total_records"] == 10
         assert len(data["results"]) == 2
+        assert data["results"][0]["api_key"] == "[REDACTED]"
+        assert data["observability"]["run_id"] == "run_123"
+        assert data["observability"]["trace_id"] == "trace_123"
 
 
 @pytest.mark.smoke
