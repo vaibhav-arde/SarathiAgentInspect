@@ -14,15 +14,28 @@ try:
     from deepeval.models.base_model import DeepEvalBaseLLM
 except ImportError:
     # Fallback if deepeval is not installed
-    class DeepEvalBaseLLM:
-        pass
+    class DeepEvalBaseLLM:  # type: ignore[no-redef]
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
+            pass
+
+        def load_model(self, *args: Any, **kwargs: Any) -> Any:
+            pass
+
+        def generate(self, *args: Any, **kwargs: Any) -> Any:
+            pass
+
+        async def a_generate(self, *args: Any, **kwargs: Any) -> Any:
+            pass
+
+        def get_model_name(self, *args: Any, **kwargs: Any) -> Any:
+            pass
 
 
 if TYPE_CHECKING:
     from sarathi_agent_inspect.providers.base import BaseProvider
 
 
-class ProviderAdapter(DeepEvalBaseLLM):
+class ProviderAdapter(DeepEvalBaseLLM):  # type: ignore[no-untyped-call]
     """Wraps a BaseProvider to satisfy DeepEval's LLM interface."""
 
     def __init__(self, provider: BaseProvider) -> None:
@@ -48,11 +61,16 @@ class ProviderAdapter(DeepEvalBaseLLM):
         """
         import asyncio
 
-        loop = asyncio.get_event_loop()
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+
         if loop.is_running():
             # If we are already in an event loop, we need a nested execution or similar.
             # DeepEval sometimes mixes async/sync. We try to handle it gracefully.
-            import nest_asyncio
+            import nest_asyncio  # type: ignore[import-untyped]
 
             nest_asyncio.apply()
 
@@ -71,4 +89,4 @@ class ProviderAdapter(DeepEvalBaseLLM):
 
     def get_model_name(self) -> str:
         """Return the underlying model name for DeepEval logging."""
-        return self.provider.config.model
+        return str(self.provider.model_name)

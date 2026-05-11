@@ -1,5 +1,6 @@
 """Unit tests for the Gemini provider."""
 
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -15,19 +16,19 @@ from sarathi_agent_inspect.providers.gemini import GeminiProvider
 
 
 @pytest.fixture
-def settings():
+def settings() -> Any:
     s = SarathiSettings()
     s.provider.gemini.api_key = "test-key"
     return s
 
 
 @pytest.fixture
-def provider(settings):
+def provider(settings: Any) -> Any:
     return GeminiProvider(settings=settings)
 
 
 @pytest.mark.asyncio
-async def test_health_check_success(provider):
+async def test_health_check_success(provider: Any) -> None:
     """Test successful health check."""
     mock_client = MagicMock()
     mock_client.models.get = MagicMock()
@@ -37,7 +38,7 @@ async def test_health_check_success(provider):
 
 
 @pytest.mark.asyncio
-async def test_health_check_fail(provider):
+async def test_health_check_fail(provider: Any) -> None:
     """Test health check failure."""
     mock_client = MagicMock()
     mock_client.models.get = MagicMock(side_effect=Exception("Failed"))
@@ -47,7 +48,7 @@ async def test_health_check_fail(provider):
 
 
 @pytest.mark.asyncio
-async def test_generate_success(provider):
+async def test_generate_success(provider: Any) -> None:
     """Test successful generation."""
     mock_response = MagicMock()
     mock_response.text = "Hello from Gemini"
@@ -77,11 +78,11 @@ async def test_generate_success(provider):
 
 
 @pytest.mark.asyncio
-async def test_generate_auth_error(provider):
+async def test_generate_auth_error(provider: Any) -> None:
     """Test auth error mapping."""
     mock_client = MagicMock()
     mock_client.aio = AsyncMock()
-    error = APIError("Auth failed", "{}")
+    error = APIError(401, {"error": "Auth failed"})
     error.code = 401
 
     mock_client.aio.models.generate_content = AsyncMock(side_effect=error)
@@ -94,11 +95,11 @@ async def test_generate_auth_error(provider):
 
 
 @pytest.mark.asyncio
-async def test_generate_rate_limit_error(provider):
+async def test_generate_rate_limit_error(provider: Any) -> None:
     """Test rate limit error mapping."""
     mock_client = MagicMock()
     mock_client.aio = AsyncMock()
-    error = APIError("Rate limit", "{}")
+    error = APIError(429, {"error": "Rate limit"})
     error.code = 429
 
     mock_client.aio.models.generate_content = AsyncMock(side_effect=error)
@@ -111,11 +112,11 @@ async def test_generate_rate_limit_error(provider):
 
 
 @pytest.mark.asyncio
-async def test_generate_connection_error(provider):
+async def test_generate_connection_error(provider: Any) -> None:
     """Test model not found connection error mapping."""
     mock_client = MagicMock()
     mock_client.aio = AsyncMock()
-    error = APIError("Model not found", "{}")
+    error = APIError(404, {"error": "Model not found"})
     error.code = 404
 
     mock_client.aio.models.generate_content = AsyncMock(side_effect=error)
@@ -128,18 +129,18 @@ async def test_generate_connection_error(provider):
 
 
 @pytest.mark.asyncio
-async def test_generate_stream(provider):
+async def test_generate_stream(provider: Any) -> None:
     """Test streaming generation."""
 
     class AsyncIteratorMock:
-        def __init__(self, items):
+        def __init__(self, items: Any) -> None:
             self.items = items
             self.index = 0
 
-        def __aiter__(self):
+        def __aiter__(self) -> "AsyncIteratorMock":
             return self
 
-        async def __anext__(self):
+        async def __anext__(self) -> Any:
             if self.index < len(self.items):
                 item = self.items[self.index]
                 self.index += 1

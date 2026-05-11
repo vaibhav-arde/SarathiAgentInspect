@@ -4,7 +4,7 @@ from sarathi_agent_inspect.providers.base import ProviderResponse
 from sarathi_agent_inspect.providers.tokens import TokenTracker, TokenUsage, format_token_report
 
 
-def test_token_usage_add():
+def test_token_usage_add() -> None:
     """Test token usage addition."""
     usage1 = TokenUsage(prompt_tokens=10, completion_tokens=20, total_tokens=30, cost_usd=0.01)
     usage2 = TokenUsage(prompt_tokens=5, completion_tokens=5, total_tokens=10, cost_usd=0.005)
@@ -17,7 +17,7 @@ def test_token_usage_add():
     assert usage1.cost_usd == 0.015
 
 
-def test_token_tracker_track():
+def test_token_tracker_track() -> None:
     """Test token tracker accumulation from provider responses."""
     tracker = TokenTracker()
 
@@ -78,7 +78,7 @@ def test_token_tracker_track():
     assert tracker.model_usage["claude-sonnet-4.6"].total_tokens == 150
 
 
-def test_format_token_report():
+def test_format_token_report() -> None:
     """Test token report formatting."""
     tracker = TokenTracker()
 

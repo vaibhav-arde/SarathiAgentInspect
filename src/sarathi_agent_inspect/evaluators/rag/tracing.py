@@ -36,7 +36,7 @@ class RAGTrace(BaseTrace):
         self.retrieval_nodes.append(node)
         self.total_cost_usd += node.cost_usd
 
-    def complete(self, gen_latency: float, gen_cost: float) -> None:
+    def complete(self, gen_latency: float = 0.0, gen_cost: float = 0.0) -> None:
         """Mark the trace as complete."""
         super().complete()
         self.generation_latency_ms = gen_latency

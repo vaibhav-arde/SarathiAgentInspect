@@ -1,6 +1,8 @@
 """Unit tests for the Ollama provider."""
 
 import json
+from collections.abc import AsyncIterator
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import httpx
@@ -12,17 +14,17 @@ from sarathi_agent_inspect.providers.ollama import OllamaProvider
 
 
 @pytest.fixture
-def settings():
+def settings() -> Any:
     return SarathiSettings()
 
 
 @pytest.fixture
-def provider(settings):
+def provider(settings: Any) -> Any:
     return OllamaProvider(settings=settings)
 
 
 @pytest.mark.asyncio
-async def test_health_check_success(provider):
+async def test_health_check_success(provider: Any) -> None:
     """Test successful health check."""
     mock_response_root = MagicMock()
     mock_response_root.status_code = 200
@@ -36,7 +38,7 @@ async def test_health_check_success(provider):
 
 
 @pytest.mark.asyncio
-async def test_health_check_fail_root(provider):
+async def test_health_check_fail_root(provider: Any) -> None:
     """Test health check failure on root endpoint."""
     mock_response_root = MagicMock()
     mock_response_root.status_code = 500
@@ -46,7 +48,7 @@ async def test_health_check_fail_root(provider):
 
 
 @pytest.mark.asyncio
-async def test_health_check_missing_model(provider):
+async def test_health_check_missing_model(provider: Any) -> None:
     """Test health check failure when model is not available."""
     mock_response_root = MagicMock()
     mock_response_root.status_code = 200
@@ -60,7 +62,7 @@ async def test_health_check_missing_model(provider):
 
 
 @pytest.mark.asyncio
-async def test_generate_success(provider):
+async def test_generate_success(provider: Any) -> None:
     """Test successful generation."""
     mock_response = MagicMock()
     mock_response.status_code = 200
@@ -86,7 +88,7 @@ async def test_generate_success(provider):
 
 
 @pytest.mark.asyncio
-async def test_generate_timeout_error(provider):
+async def test_generate_timeout_error(provider: Any) -> None:
     """Test generation timeout error mapping."""
     with (
         patch("httpx.AsyncClient.post", side_effect=httpx.TimeoutException("Timeout")),
@@ -97,7 +99,7 @@ async def test_generate_timeout_error(provider):
 
 
 @pytest.mark.asyncio
-async def test_generate_connection_error(provider):
+async def test_generate_connection_error(provider: Any) -> None:
     """Test generation connection error mapping."""
     with (
         patch("httpx.AsyncClient.post", side_effect=httpx.ConnectError("Connection refused")),
@@ -108,20 +110,20 @@ async def test_generate_connection_error(provider):
 
 
 @pytest.mark.asyncio
-async def test_generate_stream(provider):
+async def test_generate_stream(provider: Any) -> None:
     """Test streaming generation."""
 
     class MockStreamContext:
-        async def __aenter__(self):
+        async def __aenter__(self) -> "MockStreamContext":
             return self
 
-        async def __aexit__(self, exc_type, exc_val, exc_tb):
+        async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
             pass
 
-        def raise_for_status(self):
+        def raise_for_status(self) -> None:
             pass
 
-        async def aiter_lines(self):
+        async def aiter_lines(self) -> AsyncIterator[str]:
             yield json.dumps({"response": "Hello", "done": False})
             yield json.dumps({"response": " world", "done": True})
 

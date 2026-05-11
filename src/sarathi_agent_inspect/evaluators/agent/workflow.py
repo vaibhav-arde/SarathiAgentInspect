@@ -19,7 +19,7 @@ class WorkflowEvaluator:
         """Determines if the workflow achieved the final target outcome."""
         # This would typically be a combination of TaskCompletionScorer
         # and final observation validation.
-        return expected_outcome.lower() in trace.task_input.lower()  # Placeholder
+        return expected_outcome.lower() in trace.input_text.lower()  # Placeholder
 
 
 class MultiAgentEvaluator:

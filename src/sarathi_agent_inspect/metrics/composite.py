@@ -87,10 +87,10 @@ class CompositeMetric(BaseMetric):
         errors: list[Exception] = []
 
         for r in results:
-            if isinstance(r, Exception):
-                errors.append(r)
-            else:
+            if isinstance(r, MetricResult):
                 valid_results.append(r)
+            elif isinstance(r, Exception):
+                errors.append(r)
 
         if not valid_results:
             raise RuntimeError(f"All sub-metrics failed in composite metric '{self.metric_name}': {errors}")

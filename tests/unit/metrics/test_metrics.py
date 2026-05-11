@@ -1,6 +1,7 @@
 """Unit tests for metrics configuration, registry, and execution."""
 
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -10,7 +11,6 @@ from sarathi_agent_inspect.metrics.config import MetricConfig
 from sarathi_agent_inspect.metrics.execution import MetricExecutor
 from sarathi_agent_inspect.metrics.observability import MetricObserver
 from sarathi_agent_inspect.metrics.registry import MetricRegistry
-from typing import Any
 from sarathi_agent_inspect.metrics.sdk import SimpleAsyncMetric, metric
 
 # --- Test Configuration ---

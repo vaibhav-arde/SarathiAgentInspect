@@ -5,7 +5,7 @@ from sarathi_agent_inspect.datasets.synthetic import EDGE_CASE_TEMPLATES, Synthe
 # ── Template Edge-Case Tests ────────────────────────────────────────
 
 
-def test_generate_from_templates_all_categories():
+def test_generate_from_templates_all_categories() -> None:
     """Test generating from all built-in categories."""
     records = SyntheticGenerator.generate_from_templates()
 
@@ -18,7 +18,7 @@ def test_generate_from_templates_all_categories():
         assert "category" in record["metadata"]
 
 
-def test_generate_from_templates_specific_category():
+def test_generate_from_templates_specific_category() -> None:
     """Test generating from a single category."""
     records = SyntheticGenerator.generate_from_templates(categories=["unicode"])
 
@@ -27,7 +27,7 @@ def test_generate_from_templates_specific_category():
         assert record["metadata"]["category"] == "unicode"
 
 
-def test_generate_from_templates_multiple_categories():
+def test_generate_from_templates_multiple_categories() -> None:
     """Test generating from multiple specific categories."""
     records = SyntheticGenerator.generate_from_templates(categories=["empty_input", "numeric"])
 
@@ -35,7 +35,7 @@ def test_generate_from_templates_multiple_categories():
     assert len(records) == expected_count
 
 
-def test_generate_from_templates_with_base_record():
+def test_generate_from_templates_with_base_record() -> None:
     """Test template generation with a base record overlay."""
     base = {"expected_output": "I cannot help with that.", "category": "safety"}
 
@@ -53,13 +53,13 @@ def test_generate_from_templates_with_base_record():
         assert record["metadata"]["synthetic"] is True
 
 
-def test_generate_from_templates_empty_category():
+def test_generate_from_templates_empty_category() -> None:
     """Test generating from a nonexistent category returns empty list."""
     records = SyntheticGenerator.generate_from_templates(categories=["nonexistent"])
     assert records == []
 
 
-def test_edge_case_templates_structure():
+def test_edge_case_templates_structure() -> None:
     """Test that all template categories exist and have valid records."""
     expected_categories = [
         "empty_input",
@@ -81,7 +81,7 @@ def test_edge_case_templates_structure():
             assert "metadata" in template, f"Template missing 'metadata' in {category}"
 
 
-def test_injection_templates_coverage():
+def test_injection_templates_coverage() -> None:
     """Test that injection templates cover key attack vectors."""
     injection_records = SyntheticGenerator.generate_from_templates(categories=["injection"])
 

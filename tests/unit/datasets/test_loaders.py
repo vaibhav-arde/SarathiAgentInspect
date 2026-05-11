@@ -2,6 +2,7 @@
 
 import csv
 import json
+from typing import Any
 
 import pytest
 
@@ -12,7 +13,7 @@ from sarathi_agent_inspect.datasets.schemas import ChatbotRecord
 
 
 @pytest.fixture
-def temp_json_file(tmp_path):
+def temp_json_file(tmp_path: Any) -> Any:
     """Create a temporary JSON file."""
     data = [{"input": "Hi", "expected_output": "Hello"}, {"input": "Bye", "expected_output": "Goodbye"}]
     path = tmp_path / "test.json"
@@ -22,7 +23,7 @@ def temp_json_file(tmp_path):
 
 
 @pytest.fixture
-def temp_jsonl_file(tmp_path):
+def temp_jsonl_file(tmp_path: Any) -> Any:
     """Create a temporary JSONL file."""
     path = tmp_path / "test.jsonl"
     with open(path, "w") as f:
@@ -32,7 +33,7 @@ def temp_jsonl_file(tmp_path):
 
 
 @pytest.fixture
-def temp_csv_file(tmp_path):
+def temp_csv_file(tmp_path: Any) -> Any:
     """Create a temporary CSV file."""
     path = tmp_path / "test.csv"
     with open(path, "w", newline="") as f:
@@ -44,7 +45,7 @@ def temp_csv_file(tmp_path):
 
 
 @pytest.fixture
-def temp_parquet_file(tmp_path):
+def temp_parquet_file(tmp_path: Any) -> Any:
     """Create a temporary Parquet file."""
     import polars as pl
 
@@ -54,7 +55,7 @@ def temp_parquet_file(tmp_path):
     return path
 
 
-def test_json_loader(temp_json_file):
+def test_json_loader(temp_json_file: Any) -> None:
     """Test JSON loader."""
     loader = JSONLoader(schema_class=ChatbotRecord)
     loader.load(temp_json_file)
@@ -66,7 +67,7 @@ def test_json_loader(temp_json_file):
     assert validation.is_valid is True
 
 
-def test_jsonl_loader(temp_jsonl_file):
+def test_jsonl_loader(temp_jsonl_file: Any) -> None:
     """Test JSONL loader."""
     loader = JSONLoader(schema_class=ChatbotRecord)
     loader.load(temp_jsonl_file)
@@ -76,7 +77,7 @@ def test_jsonl_loader(temp_jsonl_file):
     assert records[1]["input"] == "Bye"
 
 
-def test_csv_loader(temp_csv_file):
+def test_csv_loader(temp_csv_file: Any) -> None:
     """Test CSV loader."""
     loader = CSVLoader(schema_class=ChatbotRecord)
     loader.load(temp_csv_file)
@@ -85,7 +86,7 @@ def test_csv_loader(temp_csv_file):
     assert records[0]["input"] == "Hi"
 
 
-def test_parquet_loader(temp_parquet_file):
+def test_parquet_loader(temp_parquet_file: Any) -> None:
     """Test Parquet loader."""
     loader = ParquetLoader(schema_class=ChatbotRecord)
     loader.load(temp_parquet_file)

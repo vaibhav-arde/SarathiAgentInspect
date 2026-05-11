@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import json
 import time
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any
 
 import httpx
 
@@ -233,12 +233,7 @@ class OllamaProvider(BaseProvider):
 
     def get_cost(self, prompt_tokens: int, completion_tokens: int) -> float:
         """Return cost using central estimator."""
-        return (
-            estimate_cost(
-                self._model, prompt_tokens, completion_tokens, self.provider_name
-            )
-            or 0.0
-        )
+        return estimate_cost(self._model, prompt_tokens, completion_tokens, self.provider_name) or 0.0
 
     async def generate_stream(
         self,

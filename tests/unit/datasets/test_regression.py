@@ -1,6 +1,7 @@
 """Unit tests for regression dataset tooling."""
 
 import json
+from typing import Any
 
 import pytest
 
@@ -13,7 +14,7 @@ from sarathi_agent_inspect.datasets.regression import (
 # ── RegressionSnapshot Tests ────────────────────────────────────────
 
 
-def test_snapshot_add_and_count():
+def test_snapshot_add_and_count() -> None:
     """Test adding records to a snapshot."""
     snapshot = RegressionSnapshot(version="1.0.0")
     snapshot.add_record("test_001", score=0.95, output="Answer A", input_prompt="Q1")
@@ -23,7 +24,7 @@ def test_snapshot_add_and_count():
     assert len(snapshot) == 2
 
 
-def test_snapshot_get_record():
+def test_snapshot_get_record() -> None:
     """Test retrieving a specific record."""
     snapshot = RegressionSnapshot(version="1.0.0")
     snapshot.add_record("test_001", score=0.95, output="Answer A")
@@ -36,7 +37,7 @@ def test_snapshot_get_record():
     assert snapshot.get_record("nonexistent") is None
 
 
-def test_snapshot_save_and_load(tmp_path):
+def test_snapshot_save_and_load(tmp_path: Any) -> None:
     """Test saving and loading a snapshot."""
     path = tmp_path / "baseline.json"
 
@@ -50,16 +51,18 @@ def test_snapshot_save_and_load(tmp_path):
     loaded = RegressionSnapshot.load(path)
     assert loaded.version == "2.0.0"
     assert loaded.record_count == 2
-    assert loaded.get_record("t1")["score"] == 0.9
+    record = loaded.get_record("t1")
+    assert record is not None
+    assert record["score"] == 0.9
 
 
-def test_snapshot_load_missing_file():
+def test_snapshot_load_missing_file() -> None:
     """Test loading a non-existent snapshot raises FileNotFoundError."""
     with pytest.raises(FileNotFoundError):
         RegressionSnapshot.load("/nonexistent/baseline.json")
 
 
-def test_snapshot_load_invalid_format(tmp_path):
+def test_snapshot_load_invalid_format(tmp_path: Any) -> None:
     """Test loading invalid JSON raises ValueError."""
     path = tmp_path / "bad.json"
     with open(path, "w") as f:
@@ -69,7 +72,7 @@ def test_snapshot_load_invalid_format(tmp_path):
         RegressionSnapshot.load(path)
 
 
-def test_snapshot_iteration():
+def test_snapshot_iteration() -> None:
     """Test iterating over snapshot records."""
     snapshot = RegressionSnapshot(version="1.0.0")
     snapshot.add_record("t1", score=0.9, output="A")
@@ -82,7 +85,7 @@ def test_snapshot_iteration():
 # ── RegressionComparator Tests ──────────────────────────────────────
 
 
-def test_comparator_all_pass():
+def test_comparator_all_pass() -> None:
     """Test comparison where all scores are above tolerance."""
     baseline = RegressionSnapshot(version="1.0.0")
     baseline.add_record("t1", score=0.90, output="A")
@@ -97,7 +100,7 @@ def test_comparator_all_pass():
     assert report.pass_rate == 100.0
 
 
-def test_comparator_regression_detected():
+def test_comparator_regression_detected() -> None:
     """Test comparison where a regression is detected."""
     baseline = RegressionSnapshot(version="1.0.0")
     baseline.add_record("t1", score=0.90, output="A")
@@ -118,7 +121,7 @@ def test_comparator_regression_detected():
     assert failed[0].score_delta < 0
 
 
-def test_comparator_new_test():
+def test_comparator_new_test() -> None:
     """Test that new tests (not in baseline) auto-pass."""
     baseline = RegressionSnapshot(version="1.0.0")
     baseline.add_record("t1", score=0.90, output="A")
@@ -134,7 +137,7 @@ def test_comparator_new_test():
     assert new_result.details == {"status": "new_test"}
 
 
-def test_comparator_custom_tolerance():
+def test_comparator_custom_tolerance() -> None:
     """Test per-test-id tolerance overrides."""
     baseline = RegressionSnapshot(version="1.0.0")
     baseline.add_record("strict_test", score=0.90, output="A")
@@ -154,7 +157,7 @@ def test_comparator_custom_tolerance():
 # ── RegressionReport Tests ──────────────────────────────────────────
 
 
-def test_report_to_dict():
+def test_report_to_dict() -> None:
     """Test report serialization."""
     baseline = RegressionSnapshot(version="1.0.0")
     baseline.add_record("t1", score=0.9, output="A")
@@ -169,7 +172,7 @@ def test_report_to_dict():
     assert len(report_dict["results"]) == 1
 
 
-def test_report_empty():
+def test_report_empty() -> None:
     """Test report with no records."""
     report = RegressionReport()
     assert report.overall_passed is True

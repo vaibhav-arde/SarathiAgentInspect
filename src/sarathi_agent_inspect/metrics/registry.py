@@ -12,6 +12,8 @@ import typing
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from sarathi_agent_inspect.metrics.base import BaseMetric
 
 logger = logging.getLogger(__name__)
@@ -27,7 +29,7 @@ class MetricRegistry:
     _registry: typing.ClassVar[dict[str, type[BaseMetric]]] = {}
 
     @classmethod
-    def register(cls, name: str | None = None) -> Any:
+    def register(cls, name: str | None = None) -> Callable[[type[BaseMetric]], type[BaseMetric]]:
         """Decorator to register a metric class.
 
         Args:

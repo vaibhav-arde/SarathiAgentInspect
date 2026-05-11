@@ -89,7 +89,7 @@ class EmbeddingBenchmark:
         if magnitude1 == 0 or magnitude2 == 0:
             return 0.0
 
-        return dot_product / (magnitude1 * magnitude2)
+        return float(dot_product / (magnitude1 * magnitude2))
 
     def evaluate_semantic_similarity(self, pairs: list[tuple[str, str]]) -> float:
         """Evaluate how well the model scores semantic similarity pairs.
