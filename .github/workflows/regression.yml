@@ -1,0 +1,43 @@
+name: Regression Pipeline
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: ["main"]
+
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Need full history for regression check
+          
+      - uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+          
+      - run: uv python install 3.13
+      - run: uv sync --all-extras
+      
+      - name: Run Full Regression
+        run: |
+          uv run pytest tests/ -m "integration or slow" --json-report --json-report-file=report.json
+        env:
+          SARATHI_ENV: ci
+          SARATHI_PROVIDER__OLLAMA__BASE_URL: ${{ secrets.OLLAMA_BASE_URL }}
+          SARATHI_PROVIDER__OLLAMA__MODEL: ${{ vars.OLLAMA_MODEL || 'gemma4:31b-cloud' }}
+          SARATHI_JUDGE__MODEL: ${{ vars.JUDGE_MODEL || 'gemma4:31b-cloud' }}
+          
+      - name: Enforce Quality Gates
+        run: |
+          uv run python ci/regression_gate.py --report report.json
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Upload Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: evaluation-reports
+          path: reports/

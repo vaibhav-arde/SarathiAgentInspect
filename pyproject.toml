@@ -31,6 +31,8 @@ dependencies = [
     "dvc>=3.55.0",
     "jinja2>=3.1.6",
     "allure-pytest>=2.16.0",
+    "pytest-xdist>=3.5.0",
+    "pytest-rerunfailures>=13.0",
     "slack-sdk>=3.41.0",
 ]
 
@@ -151,6 +153,9 @@ markers = [
 asyncio_mode = "auto"
 addopts = [
     "-v",
+    "-n", "auto",
+    "--reruns", "2",
+    "--reruns-delay", "1",
     "--strict-markers",
     "--tb=short",
     "-m", "not integration and not slow",

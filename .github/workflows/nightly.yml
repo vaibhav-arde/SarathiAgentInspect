@@ -1,0 +1,31 @@
+name: Nightly Benchmarks
+
+on:
+  schedule:
+    - cron: "0 0 * * *" # Every night at midnight
+  workflow_dispatch:
+
+jobs:
+  benchmarks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+      - run: uv python install 3.13
+      - run: uv sync --all-extras
+      
+      - name: Run Expensive Benchmarks
+        run: uv run pytest tests/ -m "slow" --alluredir=allure-results
+        env:
+          SARATHI_ENV: ci
+          SARATHI_PROVIDER__OLLAMA__BASE_URL: ${{ secrets.OLLAMA_BASE_URL }}
+          SARATHI_PROVIDER__OLLAMA__MODEL: ${{ vars.OLLAMA_MODEL || 'gemma4:31b-cloud' }}
+          SARATHI_JUDGE__MODEL: ${{ vars.JUDGE_MODEL || 'gemma4:31b-cloud' }}
+          
+      - name: Generate Allure Report
+        if: always()
+        run: |
+          # In a real setup, we would publish to GH Pages or S3
+          echo "Generating nightly Allure reports..."
