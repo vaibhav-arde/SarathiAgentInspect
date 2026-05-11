@@ -1,6 +1,5 @@
 """Unit tests for the RAG Evaluation Engine."""
 
-
 from sarathi_agent_inspect.evaluators.rag.adversarial import RAGAdversary
 from sarathi_agent_inspect.evaluators.rag.chunking import ChunkAnalyzer
 from sarathi_agent_inspect.evaluators.rag.citations import CitationValidator
@@ -15,7 +14,7 @@ from sarathi_agent_inspect.evaluators.rag.tracing import (
 )
 
 
-def test_chunk_overlap_ratio():
+def test_chunk_overlap_ratio() -> None:
     """Test token overlap calculation."""
     chunks = [
         "The quick brown fox jumps",
@@ -36,12 +35,12 @@ def test_chunk_overlap_ratio():
     assert ratio == 0.4
 
 
-def test_chunk_overlap_empty():
+def test_chunk_overlap_empty() -> None:
     assert ChunkAnalyzer().calculate_overlap_ratio([]) == 0.0
     assert ChunkAnalyzer().calculate_overlap_ratio(["hello world"]) == 0.0
 
 
-def test_rank_context_distribution():
+def test_rank_context_distribution() -> None:
     """Test context ranking."""
     retrieved = [
         "Not relevant at all",
@@ -53,7 +52,7 @@ def test_rank_context_distribution():
     assert indices == [1]
 
 
-def test_citation_validator_valid():
+def test_citation_validator_valid() -> None:
     """Test citation validation with valid citations."""
     validator = CitationValidator()
     text = "The sky is blue [1]. Water is wet [2]."
@@ -65,7 +64,7 @@ def test_citation_validator_valid():
     assert result["citation_accuracy"] == 1.0
 
 
-def test_citation_validator_fabricated():
+def test_citation_validator_fabricated() -> None:
     """Test citation validation with fabricated citations."""
     validator = CitationValidator()
     text = "The sky is blue [1]. Earth is flat [99]."
@@ -77,7 +76,7 @@ def test_citation_validator_fabricated():
     assert result["citation_accuracy"] == 0.5
 
 
-def test_rag_tracer():
+def test_rag_tracer() -> None:
     """Test RAG trace and debugger."""
     trace = RAGTrace(trace_id="123", input_text="What is AI?")
 
@@ -96,7 +95,7 @@ def test_rag_tracer():
     assert bottlenecks["costliest_query"] == "AI history"
 
 
-def test_missing_context_analysis():
+def test_missing_context_analysis() -> None:
     """Test missing context analysis."""
     retrieved = ["doc1", "doc2", "doc3"]
     golden = ["doc2", "doc4"]
@@ -107,12 +106,14 @@ def test_missing_context_analysis():
     assert res["recall_ratio"] == 0.5
 
 
-def test_embedding_benchmark():
+def test_embedding_benchmark() -> None:
     """Test embedding drift detection."""
+
     class MockEmbeddingModel:
         def embed_text(self, text: str) -> list[float]:
             # mock returning identical vectors for easy 1.0 similarity
             return [0.1, 0.2, 0.3]
+
         def embed_batch(self, texts: list[str]) -> list[list[float]]:
             return [[0.1, 0.2, 0.3] for _ in texts]
 
@@ -134,9 +135,10 @@ def test_embedding_benchmark():
     assert tracker.check_drift(score, tolerance=0.05) is True
 
 
-def test_rag_adversary_context_poisoning():
+def test_rag_adversary_context_poisoning() -> None:
     """Test context poisoning."""
     from unittest.mock import MagicMock
+
     mock_provider = MagicMock()
     adversary = RAGAdversary(provider=mock_provider, seed=42)
     context = ["Fact 1", "Fact 2"]

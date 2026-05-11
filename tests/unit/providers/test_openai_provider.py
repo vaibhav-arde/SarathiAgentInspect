@@ -1,5 +1,6 @@
 """Unit tests for the OpenAI provider."""
 
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import httpx
@@ -16,19 +17,19 @@ from sarathi_agent_inspect.providers.openai_provider import OpenAIProvider
 
 
 @pytest.fixture
-def settings():
+def settings() -> Any:
     s = SarathiSettings()
     s.provider.openai.api_key = "test-key"
     return s
 
 
 @pytest.fixture
-def provider(settings):
+def provider(settings: Any) -> Any:
     return OpenAIProvider(settings=settings)
 
 
 @pytest.mark.asyncio
-async def test_health_check_success(provider):
+async def test_health_check_success(provider: Any) -> None:
     """Test successful health check."""
     mock_client = AsyncMock()
     mock_client.models.list = AsyncMock()
@@ -38,7 +39,7 @@ async def test_health_check_success(provider):
 
 
 @pytest.mark.asyncio
-async def test_health_check_fail(provider):
+async def test_health_check_fail(provider: Any) -> None:
     """Test health check failure."""
     mock_client = AsyncMock()
     mock_client.models.list = AsyncMock(side_effect=Exception("Failed"))
@@ -48,7 +49,7 @@ async def test_health_check_fail(provider):
 
 
 @pytest.mark.asyncio
-async def test_generate_success(provider):
+async def test_generate_success(provider: Any) -> None:
     """Test successful generation."""
     mock_response = MagicMock()
     mock_choice = MagicMock()
@@ -75,7 +76,7 @@ async def test_generate_success(provider):
 
 
 @pytest.mark.asyncio
-async def test_generate_auth_error(provider):
+async def test_generate_auth_error(provider: Any) -> None:
     """Test auth error mapping."""
     mock_client = AsyncMock()
 
@@ -87,13 +88,15 @@ async def test_generate_auth_error(provider):
         side_effect=openai.AuthenticationError("Auth failed", response=mock_response, body=None)
     )
 
-    with patch("sarathi_agent_inspect.providers.openai_provider.AsyncOpenAI", return_value=mock_client):
-        with pytest.raises(ProviderAuthenticationError):
-            await provider.generate("Hi")
+    with (
+        patch("sarathi_agent_inspect.providers.openai_provider.AsyncOpenAI", return_value=mock_client),
+        pytest.raises(ProviderAuthenticationError),
+    ):
+        await provider.generate("Hi")
 
 
 @pytest.mark.asyncio
-async def test_generate_rate_limit_error(provider):
+async def test_generate_rate_limit_error(provider: Any) -> None:
     """Test rate limit error mapping."""
     mock_client = AsyncMock()
     mock_request = httpx.Request("POST", "https://api.openai.com/v1/chat/completions")
@@ -103,39 +106,41 @@ async def test_generate_rate_limit_error(provider):
         side_effect=openai.RateLimitError("Rate limit", response=mock_response, body=None)
     )
 
-    with patch("sarathi_agent_inspect.providers.openai_provider.AsyncOpenAI", return_value=mock_client):
-        with pytest.raises(ProviderRateLimitError):
-            await provider.generate("Hi")
+    with (
+        patch("sarathi_agent_inspect.providers.openai_provider.AsyncOpenAI", return_value=mock_client),
+        pytest.raises(ProviderRateLimitError),
+    ):
+        await provider.generate("Hi")
 
 
 @pytest.mark.asyncio
-async def test_generate_timeout_error(provider):
+async def test_generate_timeout_error(provider: Any) -> None:
     """Test timeout error mapping."""
     mock_client = AsyncMock()
     mock_request = httpx.Request("POST", "https://api.openai.com/v1/chat/completions")
 
-    mock_client.chat.completions.create = AsyncMock(
-        side_effect=openai.APITimeoutError(request=mock_request)
-    )
+    mock_client.chat.completions.create = AsyncMock(side_effect=openai.APITimeoutError(request=mock_request))
 
-    with patch("sarathi_agent_inspect.providers.openai_provider.AsyncOpenAI", return_value=mock_client):
-        with pytest.raises(ProviderTimeoutError):
-            await provider.generate("Hi")
+    with (
+        patch("sarathi_agent_inspect.providers.openai_provider.AsyncOpenAI", return_value=mock_client),
+        pytest.raises(ProviderTimeoutError),
+    ):
+        await provider.generate("Hi")
 
 
 @pytest.mark.asyncio
-async def test_generate_stream(provider):
+async def test_generate_stream(provider: Any) -> None:
     """Test streaming generation."""
 
     class AsyncIteratorMock:
-        def __init__(self, items):
+        def __init__(self, items: Any) -> None:
             self.items = items
             self.index = 0
 
-        def __aiter__(self):
+        def __aiter__(self) -> "AsyncIteratorMock":
             return self
 
-        async def __anext__(self):
+        async def __anext__(self) -> Any:
             if self.index < len(self.items):
                 item = self.items[self.index]
                 self.index += 1
@@ -151,9 +156,7 @@ async def test_generate_stream(provider):
     mock_chunk2.choices[0].delta.content = " world"
 
     mock_client = AsyncMock()
-    mock_client.chat.completions.create = AsyncMock(
-        return_value=AsyncIteratorMock([mock_chunk1, mock_chunk2])
-    )
+    mock_client.chat.completions.create = AsyncMock(return_value=AsyncIteratorMock([mock_chunk1, mock_chunk2]))
 
     with patch("sarathi_agent_inspect.providers.openai_provider.AsyncOpenAI", return_value=mock_client):
         chunks = []

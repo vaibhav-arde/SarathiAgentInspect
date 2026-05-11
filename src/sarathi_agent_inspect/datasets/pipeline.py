@@ -54,6 +54,7 @@ class DatasetPipeline:
         Args:
             tags: List of tags to append.
         """
+
         def _add_tags(record: DatasetRecord) -> DatasetRecord:
             if "metadata" not in record:
                 record["metadata"] = {}
@@ -106,6 +107,7 @@ class DatasetPipeline:
                         # Fallback: convert dict to a sorted string for hashing
                         try:
                             import json
+
                             key = json.dumps(current_record, sort_keys=True)
                         except Exception:
                             key = str(current_record)
@@ -198,4 +200,3 @@ class DatasetPipeline:
             if len(results) >= n:
                 break
         return results
-

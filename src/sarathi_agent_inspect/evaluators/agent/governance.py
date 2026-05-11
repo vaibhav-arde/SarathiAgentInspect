@@ -46,7 +46,7 @@ class TaskCompletionScorer:
         # Placeholder: 1.0 if identical, 0.0 if entirely different.
         if current_state == target_state:
             return 1.0
-        return 0.5 # Default partial completion
+        return 0.5  # Default partial completion
 
 
 class InfiniteLoopProtector:

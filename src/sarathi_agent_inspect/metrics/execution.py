@@ -11,6 +11,7 @@ import asyncio
 import logging
 from typing import TYPE_CHECKING, Any
 
+from sarathi_agent_inspect.core.concurrency import ConcurrencyManager
 from sarathi_agent_inspect.metrics.base import MetricResult
 
 if TYPE_CHECKING:
@@ -28,6 +29,7 @@ class MetricExecutor:
         max_retries: int = 3,
         retry_delay: float = 1.0,
         concurrency: int = 10,
+        rpm: int = 60,
     ) -> None:
         """Initialize the metric executor.
 
@@ -35,10 +37,11 @@ class MetricExecutor:
             max_retries: Number of times to retry a failed metric.
             retry_delay: Base delay between retries (exponential backoff applied).
             concurrency: Max concurrent metric executions.
+            rpm: Requests per minute (global rate limit).
         """
         self.max_retries = max_retries
         self.retry_delay = retry_delay
-        self.semaphore = asyncio.Semaphore(concurrency)
+        self.concurrency_manager = ConcurrencyManager(max_concurrent=concurrency, rpm=rpm)
 
     async def execute_metric(
         self,
@@ -53,7 +56,7 @@ class MetricExecutor:
         **kwargs: Any,
     ) -> MetricResult:
         """Execute a single metric with retries and normalization."""
-        async with self.semaphore:
+        async with await self.concurrency_manager.throttle():
             attempt = 0
             while attempt <= self.max_retries:
                 try:

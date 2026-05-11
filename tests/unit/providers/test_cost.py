@@ -3,7 +3,7 @@
 from sarathi_agent_inspect.providers.cost import estimate_cost, get_pricing
 
 
-def test_get_pricing_exact_match():
+def test_get_pricing_exact_match() -> None:
     """Test exact match pricing."""
     pricing = get_pricing("gpt-4o")
     assert pricing is not None
@@ -11,7 +11,7 @@ def test_get_pricing_exact_match():
     assert pricing.output_cost_per_m == 10.00
 
 
-def test_get_pricing_fuzzy_match():
+def test_get_pricing_fuzzy_match() -> None:
     """Test fuzzy match pricing."""
     pricing = get_pricing("gpt-4o-2024-11-20")
     assert pricing is not None
@@ -19,7 +19,7 @@ def test_get_pricing_fuzzy_match():
     assert pricing.output_cost_per_m == 10.00
 
 
-def test_get_pricing_ollama():
+def test_get_pricing_ollama() -> None:
     """Test Ollama free pricing."""
     pricing = get_pricing("llama3", provider_name="ollama")
     assert pricing is not None
@@ -27,13 +27,13 @@ def test_get_pricing_ollama():
     assert pricing.output_cost_per_m == 0.0
 
 
-def test_get_pricing_unknown():
+def test_get_pricing_unknown() -> None:
     """Test unknown model."""
     pricing = get_pricing("unknown-model-123")
     assert pricing is None
 
 
-def test_estimate_cost():
+def test_estimate_cost() -> None:
     """Test cost estimation calculation."""
     # 1000 input tokens = 0.0025 USD
     # 2000 output tokens = 0.020 USD
@@ -43,7 +43,7 @@ def test_estimate_cost():
     assert round(cost, 4) == 0.0225
 
 
-def test_estimate_cost_unknown():
+def test_estimate_cost_unknown() -> None:
     """Test cost estimation calculation for unknown model."""
     cost = estimate_cost("unknown-model-123", prompt_tokens=1000, completion_tokens=2000)
     assert cost is None

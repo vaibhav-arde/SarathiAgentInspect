@@ -203,6 +203,38 @@ class OllamaProvider(BaseProvider):
             raw_response=data,
         )
 
+    async def embed(self, text: str | list[str]) -> list[float] | list[list[float]]:
+        """Generate vector embeddings via Ollama /api/embeddings."""
+        if not self._client:
+            await self.initialize()
+
+        assert self._client is not None
+        if isinstance(text, str):
+            payload = {"model": self._model, "prompt": text}
+            response = await self._client.post("/api/embeddings", json=payload)
+            response.raise_for_status()
+            result: list[float] = response.json().get("embedding", [])
+            return result
+        else:
+            # Batch embedding
+            results: list[list[float]] = []
+            for t in text:
+                payload = {"model": self._model, "prompt": t}
+                response = await self._client.post("/api/embeddings", json=payload)
+                response.raise_for_status()
+                results.append(response.json().get("embedding", []))
+            return results
+
+    def get_token_count(self, text: str) -> int:
+        """Simple word-based token count as fallback for local models."""
+        # In enterprise RAG, you'd use tiktoken or sentencepiece.
+        # This is a baseline implementation.
+        return len(text.split())
+
+    def get_cost(self, prompt_tokens: int, completion_tokens: int) -> float:
+        """Return cost using central estimator."""
+        return estimate_cost(self._model, prompt_tokens, completion_tokens, self.provider_name) or 0.0
+
     async def generate_stream(
         self,
         prompt: str,

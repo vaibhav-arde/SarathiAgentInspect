@@ -150,13 +150,15 @@ class BaseDataset(ABC):
                 return record
         raise IndexError(f"Record index {index} out of range")
 
-    def filter(self, predicate: Any) -> list[DatasetRecord]:
-        """Filter records using a predicate function.
+    def filter(self, predicate: Any) -> Iterator[DatasetRecord]:
+        """Filter records using a predicate function (Lazy Evaluation).
 
         Args:
             predicate: A callable that accepts a record and returns bool.
 
-        Returns:
-            List of records matching the predicate.
+        Yields:
+            Records matching the predicate.
         """
-        return [record for record in self if predicate(record)]
+        for record in self:
+            if predicate(record):
+                yield record

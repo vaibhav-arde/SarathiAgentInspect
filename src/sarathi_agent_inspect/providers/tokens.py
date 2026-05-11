@@ -82,9 +82,6 @@ def format_token_report(tracker: TokenTracker) -> str:
     if tracker.model_usage:
         lines.append("\nBreakdown by Model:")
         for model, usage in tracker.model_usage.items():
-            lines.append(
-                f"  - {model}: {usage.total_tokens:,} tokens "
-                f"(${usage.cost_usd:.6f})"
-            )
+            lines.append(f"  - {model}: {usage.total_tokens:,} tokens (${usage.cost_usd:.6f})")
 
     return "\n".join(lines)

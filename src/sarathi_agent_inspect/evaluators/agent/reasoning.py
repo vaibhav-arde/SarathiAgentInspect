@@ -22,13 +22,13 @@ class PlanningEvaluator:
         self.geval = WrappedGEvalMetric(
             name="Planning Quality",
             criteria="Evaluate if the plan is logical, complete, and avoids redundant steps.",
-            evaluation_params=[], # Standard params will be added during execution
+            evaluation_params=[],  # Standard params will be added during execution
             provider=provider,
         )
 
     async def evaluate_plan(self, task: str, plan: str) -> float:
         """Score the agent's plan for a given task."""
-        result = await self.geval.evaluate(
+        result = await self.geval.compute(
             input_text=task,
             actual_output=plan,
         )

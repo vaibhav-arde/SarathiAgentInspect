@@ -19,7 +19,7 @@ class WorkflowEvaluator:
         """Determines if the workflow achieved the final target outcome."""
         # This would typically be a combination of TaskCompletionScorer
         # and final observation validation.
-        return expected_outcome.lower() in trace.task_input.lower() # Placeholder
+        return expected_outcome.lower() in trace.input_text.lower()  # Placeholder
 
 
 class MultiAgentEvaluator:
@@ -30,11 +30,7 @@ class MultiAgentEvaluator:
 
     def track_handoff(self, from_agent: str, to_agent: str, context: str) -> None:
         """Log a handoff between two agents."""
-        self.handoffs.append({
-            "from": from_agent,
-            "to": to_agent,
-            "context": context
-        })
+        self.handoffs.append({"from": from_agent, "to": to_agent, "context": context})
 
     def get_handoff_efficiency(self) -> float:
         """Measures if handoffs are too frequent (chatter)."""
@@ -59,7 +55,7 @@ class ReplayEngine:
         for span in self.trace.spans:
             for i, step in enumerate(span.steps):
                 if step.type.name == "ACTION" and i + 1 < len(span.steps):
-                    next_step = span.steps[i+1]
+                    next_step = span.steps[i + 1]
                     if next_step.type.name == "OBSERVATION":
                         mocks[step.content] = next_step.content
         return mocks

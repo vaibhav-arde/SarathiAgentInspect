@@ -1,5 +1,8 @@
 """Unit tests for the ProviderRegistry and ProviderFactory."""
 
+from collections.abc import AsyncIterator
+from typing import Any
+
 import pytest
 from pydantic import BaseModel
 
@@ -22,7 +25,7 @@ class MockSettings(BaseModel):
 
 
 @pytest.fixture
-def mock_settings():
+def mock_settings() -> Any:
     return MockSettings()
 
 
@@ -30,7 +33,7 @@ def mock_settings():
 class MockProvider(BaseProvider):
     """Mock provider for testing."""
 
-    def __init__(self, settings, **kwargs):
+    def __init__(self, settings: Any, **kwargs: Any) -> None:
         super().__init__(settings, **kwargs)
         self.is_initialized = False
 
@@ -56,7 +59,7 @@ class MockProvider(BaseProvider):
             provider=self.provider_name, model=self.model_name, supports_streaming=False, supports_tools=False
         )
 
-    async def generate(self, prompt: str, **kwargs) -> ProviderResponse:
+    async def generate(self, prompt: str, **kwargs: Any) -> ProviderResponse:
         return ProviderResponse(
             content="mock response",
             model=self.model_name,
@@ -70,11 +73,22 @@ class MockProvider(BaseProvider):
             raw_response={},
         )
 
-    async def generate_stream(self, prompt: str, **kwargs):
+    async def generate_stream(self, prompt: str, **kwargs: Any) -> AsyncIterator[str]:
         yield "mock response"
 
+    async def embed(self, text: str | list[str]) -> list[float] | list[list[float]]:
+        if isinstance(text, str):
+            return [0.1] * 128
+        return [[0.1] * 128 for _ in text]
 
-def test_registry_registration():
+    def get_token_count(self, text: str) -> int:
+        return len(text.split())
+
+    def get_cost(self, prompt_tokens: int, completion_tokens: int) -> float:
+        return 0.0
+
+
+def test_registry_registration() -> None:
     """Test registering and retrieving a provider."""
     providers = ProviderRegistry.list_providers()
     assert "mock" in providers
@@ -83,29 +97,30 @@ def test_registry_registration():
     assert cls is MockProvider
 
 
-def test_registry_unknown_provider():
+def test_registry_unknown_provider() -> None:
     """Test retrieving an unknown provider."""
     with pytest.raises(ConfigurationError) as exc_info:
         ProviderRegistry.get("unknown")
     assert "Unknown provider" in str(exc_info.value)
 
 
-def test_factory_create(mock_settings):
+def test_factory_create(mock_settings: Any) -> None:
     """Test factory creates a provider."""
     # We cast to SarathiSettings for the factory type hint
-    provider = ProviderFactory.create(settings=mock_settings)  # type: ignore[arg-type]
+    provider = ProviderFactory.create(settings=mock_settings)
     assert isinstance(provider, MockProvider)
     assert provider.provider_name == "mock"
 
 
-def test_factory_override(mock_settings):
+def test_factory_override(mock_settings: Any) -> None:
     """Test factory with provider name override."""
+
     @register_provider("mock2")
     class MockProvider2(MockProvider):
         @property
         def provider_name(self) -> str:
             return "mock2"
 
-    provider = ProviderFactory.create(settings=mock_settings, provider_name="mock2")  # type: ignore[arg-type]
+    provider = ProviderFactory.create(settings=mock_settings, provider_name="mock2")
     assert isinstance(provider, MockProvider2)
     assert provider.provider_name == "mock2"

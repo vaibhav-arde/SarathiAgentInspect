@@ -188,6 +188,37 @@ class OpenAIProvider(BaseProvider):
             raw_response=response.model_dump(),
         )
 
+    async def embed(self, text: str | list[str]) -> list[float] | list[list[float]]:
+        """Generate vector embeddings using OpenAI."""
+        if not self._client:
+            await self.initialize()
+
+        assert self._client is not None
+        # Default embedding model for OpenAI
+        model = "text-embedding-3-small"
+        response = await self._client.embeddings.create(
+            model=model,
+            input=text,
+        )
+
+        if isinstance(text, str):
+            return response.data[0].embedding
+        return [item.embedding for item in response.data]
+
+    def get_token_count(self, text: str) -> int:
+        """Calculate token count using tiktoken."""
+        import tiktoken  # type: ignore[import-not-found]
+
+        try:
+            encoding = tiktoken.encoding_for_model(self._model)
+        except KeyError:
+            encoding = tiktoken.get_encoding("cl100k_base")
+        return len(encoding.encode(text))
+
+    def get_cost(self, prompt_tokens: int, completion_tokens: int) -> float:
+        """Return cost using central estimator."""
+        return estimate_cost(self._model, prompt_tokens, completion_tokens, self.provider_name) or 0.0
+
     async def generate_stream(
         self,
         prompt: str,

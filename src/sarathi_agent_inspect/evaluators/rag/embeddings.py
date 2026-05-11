@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class EmbeddingVersionTracker:
     """Tracks versions of embedding models to prevent silent regressions."""
+
     model_name: str
     version: str
     dimension: int
@@ -41,6 +42,7 @@ class EmbeddingVersionTracker:
 
 class EmbeddingModel(Protocol):
     """Abstract interface for pluggable embedding models."""
+
     def embed_text(self, text: str) -> list[float]:
         """Convert a single string into a vector embedding."""
         ...
@@ -87,7 +89,7 @@ class EmbeddingBenchmark:
         if magnitude1 == 0 or magnitude2 == 0:
             return 0.0
 
-        return dot_product / (magnitude1 * magnitude2)
+        return float(dot_product / (magnitude1 * magnitude2))
 
     def evaluate_semantic_similarity(self, pairs: list[tuple[str, str]]) -> float:
         """Evaluate how well the model scores semantic similarity pairs.

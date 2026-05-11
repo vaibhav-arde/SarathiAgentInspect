@@ -4,6 +4,8 @@ These tests run against a real local Ollama instance and are skipped by default.
 Run them using: pytest -m integration
 """
 
+from typing import Any
+
 import pytest
 
 from sarathi_agent_inspect.core.config.settings import SarathiSettings
@@ -11,7 +13,7 @@ from sarathi_agent_inspect.providers.ollama import OllamaProvider
 
 
 @pytest.fixture
-def live_settings():
+def live_settings() -> Any:
     """Settings configured for a live local Ollama instance."""
     s = SarathiSettings()
     s.provider.default = "ollama"
@@ -22,7 +24,7 @@ def live_settings():
 
 @pytest.mark.asyncio
 @pytest.mark.integration
-async def test_ollama_live_health_check(live_settings):
+async def test_ollama_live_health_check(live_settings: Any) -> None:
     """Test health check against real Ollama instance."""
     provider = OllamaProvider(settings=live_settings)
 
@@ -32,14 +34,11 @@ async def test_ollama_live_health_check(live_settings):
 
 @pytest.mark.asyncio
 @pytest.mark.integration
-async def test_ollama_live_generate(live_settings):
+async def test_ollama_live_generate(live_settings: Any) -> None:
     """Test generating a simple completion from live Ollama."""
     provider = OllamaProvider(settings=live_settings)
 
-    response = await provider.generate(
-        "Say 'Hello integration test' and nothing else.",
-        temperature=0.0
-    )
+    response = await provider.generate("Say 'Hello integration test' and nothing else.", temperature=0.0)
 
     assert response.provider == "ollama"
     assert response.model == live_settings.provider.ollama.model
@@ -50,15 +49,12 @@ async def test_ollama_live_generate(live_settings):
 
 @pytest.mark.asyncio
 @pytest.mark.integration
-async def test_ollama_live_stream(live_settings):
+async def test_ollama_live_stream(live_settings: Any) -> None:
     """Test streaming a completion from live Ollama."""
     provider = OllamaProvider(settings=live_settings)
 
     chunks = []
-    async for chunk in provider.generate_stream(
-        "Count from 1 to 3.",
-        temperature=0.0
-    ):
+    async for chunk in provider.generate_stream("Count from 1 to 3.", temperature=0.0):
         chunks.append(chunk)
 
     full_response = "".join(chunks)

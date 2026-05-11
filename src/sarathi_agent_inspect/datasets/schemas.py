@@ -34,9 +34,7 @@ class RAGRecord(DatasetRecordSchema):
     """Schema for Retrieval-Augmented Generation evaluation."""
 
     query: str = Field(..., description="User query")
-    retrieved_contexts: list[str] = Field(
-        default_factory=list, description="Documents retrieved by the search system"
-    )
+    retrieved_contexts: list[str] = Field(default_factory=list, description="Documents retrieved by the search system")
     expected_response: str | None = Field(default=None, description="Expected generated response")
 
 
@@ -55,9 +53,7 @@ class AIAgentRecord(DatasetRecordSchema):
     expected_actions: list[AgentAction] = Field(
         default_factory=list, description="Sequence of actions the agent should perform"
     )
-    initial_state: dict[str, Any] = Field(
-        default_factory=dict, description="Initial environment state or context"
-    )
+    initial_state: dict[str, Any] = Field(default_factory=dict, description="Initial environment state or context")
 
 
 class Message(BaseModel):
@@ -70,9 +66,7 @@ class Message(BaseModel):
 class MultiTurnRecord(DatasetRecordSchema):
     """Schema for multi-turn conversation evaluation."""
 
-    dialogue_history: list[Message] = Field(
-        ..., description="List of previous messages in the conversation"
-    )
+    dialogue_history: list[Message] = Field(..., description="List of previous messages in the conversation")
     expected_next_turn: Message | None = Field(
         default=None, description="The expected next response from the assistant"
     )
@@ -97,12 +91,8 @@ class ToolCallingRecord(DatasetRecordSchema):
     """Schema for evaluating tool calling / function calling models."""
 
     user_prompt: str = Field(..., description="User prompt or task")
-    available_tools: list[ToolDefinition] = Field(
-        ..., description="List of tools provided to the model"
-    )
-    expected_tool_calls: list[ToolCall] = Field(
-        default_factory=list, description="List of expected function calls"
-    )
+    available_tools: list[ToolDefinition] = Field(..., description="List of tools provided to the model")
+    expected_tool_calls: list[ToolCall] = Field(default_factory=list, description="List of expected function calls")
 
 
 class SafetyRecord(DatasetRecordSchema):
@@ -124,9 +114,7 @@ class SafetyRecord(DatasetRecordSchema):
         default=None,
         description="Specific toxicity category (e.g., 'hate_speech', 'sexual', 'violence', 'self_harm')",
     )
-    should_refuse: bool = Field(
-        default=True, description="Whether the model should refuse to answer this prompt"
-    )
+    should_refuse: bool = Field(default=True, description="Whether the model should refuse to answer this prompt")
     severity: str = Field(
         default="medium",
         description="Risk severity level: 'low', 'medium', 'high', 'critical'",
@@ -148,12 +136,8 @@ class BenchmarkRecord(DatasetRecordSchema):
     )
     input: str = Field(..., description="The benchmark question or prompt")
     expected_output: str = Field(..., description="The correct/expected answer")
-    choices: list[str] = Field(
-        default_factory=list, description="Multiple choice options (if applicable)"
-    )
-    expected_score: float | None = Field(
-        default=None, description="Expected numeric score for this record (0.0-1.0)"
-    )
+    choices: list[str] = Field(default_factory=list, description="Multiple choice options (if applicable)")
+    expected_score: float | None = Field(default=None, description="Expected numeric score for this record (0.0-1.0)")
 
 
 class RegressionRecord(DatasetRecordSchema):
@@ -166,15 +150,9 @@ class RegressionRecord(DatasetRecordSchema):
     test_id: str = Field(..., description="Unique identifier for this regression test case")
     input: str = Field(..., description="The input prompt or query")
     baseline_output: str = Field(..., description="The output from the baseline model version")
-    baseline_version: str = Field(
-        default="1.0.0", description="Version string of the baseline model/config"
-    )
-    baseline_score: float | None = Field(
-        default=None, description="Score achieved by the baseline (0.0-1.0)"
-    )
+    baseline_version: str = Field(default="1.0.0", description="Version string of the baseline model/config")
+    baseline_score: float | None = Field(default=None, description="Score achieved by the baseline (0.0-1.0)")
     expected_output: str | None = Field(
         default=None, description="Optional golden expected output for absolute comparison"
     )
-    tolerance: float = Field(
-        default=0.05, description="Acceptable score regression tolerance (e.g., 0.05 = 5%)"
-    )
+    tolerance: float = Field(default=0.05, description="Acceptable score regression tolerance (e.g., 0.05 = 5%)")

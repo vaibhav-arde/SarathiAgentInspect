@@ -31,6 +31,7 @@ if TYPE_CHECKING:
 @dataclass
 class RAGEvaluationResult:
     """Consolidated result of a RAG evaluation."""
+
     retriever_score: float
     generator_score: float
     overall_score: float
@@ -144,15 +145,14 @@ class RAGRegressionPipeline:
     def __init__(self, comparator: RegressionComparator) -> None:
         self.comparator = comparator
 
-    def detect_drift(self, baseline_name: str, new_scores: dict[str, float]) -> bool:
+    def detect_drift(self, new_scores: dict[str, float]) -> bool:
         """Compare new RAG scores against a baseline regression snapshot.
 
         Args:
-            baseline_name: The name of the captured baseline.
             new_scores: Dict mapping test IDs to their overall RAG scores.
 
         Returns:
             True if drift is acceptable, False if it failed the regression check.
         """
-        report = self.comparator.compare(baseline_name, new_scores)
-        return report.passed
+        report = self.comparator.compare(new_scores)
+        return report.overall_passed

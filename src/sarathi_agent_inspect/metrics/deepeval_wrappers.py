@@ -46,6 +46,7 @@ class DeepEvalWrapperBase(BaseMetric):
 
         if self.provider:
             from sarathi_agent_inspect.metrics.deepeval_adapter import ProviderAdapter
+
             self._deepeval_model = ProviderAdapter(self.provider)
 
     async def _measure_deepeval(self, test_case: LLMTestCase, metric: Any) -> MetricResult:

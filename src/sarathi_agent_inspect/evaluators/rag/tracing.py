@@ -6,14 +6,16 @@ cost tracking, and debugging retrieval failures.
 
 from __future__ import annotations
 
-import time
 from dataclasses import dataclass, field
 from typing import Any
+
+from sarathi_agent_inspect.core.observability import BaseTrace
 
 
 @dataclass
 class RetrievalNode:
     """Represents a single step in a multi-hop retrieval."""
+
     query: str
     documents_retrieved: int
     latency_ms: float
@@ -22,35 +24,24 @@ class RetrievalNode:
 
 
 @dataclass
-class RAGTrace:
+class RAGTrace(BaseTrace):
     """Tracks a complete RAG execution trace."""
-    trace_id: str
-    input_text: str
-    start_time: float = field(default_factory=time.time)
-    end_time: float | None = None
+
     retrieval_nodes: list[RetrievalNode] = field(default_factory=list)
     generation_latency_ms: float = 0.0
     generation_cost_usd: float = 0.0
-    total_cost_usd: float = 0.0
 
     def add_node(self, node: RetrievalNode) -> None:
         """Add a retrieval hop to the trace."""
         self.retrieval_nodes.append(node)
         self.total_cost_usd += node.cost_usd
 
-    def complete(self, gen_latency: float, gen_cost: float) -> None:
+    def complete(self, gen_latency: float = 0.0, gen_cost: float = 0.0) -> None:
         """Mark the trace as complete."""
-        self.end_time = time.time()
+        super().complete()
         self.generation_latency_ms = gen_latency
         self.generation_cost_usd = gen_cost
         self.total_cost_usd += gen_cost
-
-    @property
-    def total_latency_ms(self) -> float:
-        """Calculate total RAG latency."""
-        if not self.end_time:
-            return 0.0
-        return (self.end_time - self.start_time) * 1000.0
 
 
 class RetrievalDebugger:

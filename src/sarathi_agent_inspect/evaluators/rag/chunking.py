@@ -10,12 +10,13 @@ from typing import Protocol
 
 class Tokenizer(Protocol):
     """Abstract interface for pluggable tokenizers."""
-    def tokenize(self, text: str) -> list[str]:
-        ...
+
+    def tokenize(self, text: str) -> list[str]: ...
 
 
 class DefaultTokenizer:
     """Lightweight reference tokenizer using simple whitespace splitting."""
+
     def tokenize(self, text: str) -> list[str]:
         return text.lower().split()
 
@@ -40,7 +41,7 @@ class ChunkAnalyzer:
 
         for i in range(len(chunks) - 1):
             chunk1_tokens = set(self.tokenizer.tokenize(chunks[i]))
-            chunk2_tokens = set(self.tokenizer.tokenize(chunks[i+1]))
+            chunk2_tokens = set(self.tokenizer.tokenize(chunks[i + 1]))
 
             overlap = len(chunk1_tokens.intersection(chunk2_tokens))
             total_overlap_tokens += overlap

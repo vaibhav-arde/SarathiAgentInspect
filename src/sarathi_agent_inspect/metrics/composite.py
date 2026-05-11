@@ -87,10 +87,10 @@ class CompositeMetric(BaseMetric):
         errors: list[Exception] = []
 
         for r in results:
-            if isinstance(r, Exception):
-                errors.append(r)
-            else:
+            if isinstance(r, MetricResult):
                 valid_results.append(r)
+            elif isinstance(r, Exception):
+                errors.append(r)
 
         if not valid_results:
             raise RuntimeError(f"All sub-metrics failed in composite metric '{self.metric_name}': {errors}")
@@ -105,11 +105,11 @@ class CompositeMetric(BaseMetric):
         elif self.aggregation == "max":
             final_score = max(scores)
         elif self.aggregation == "weighted":
-            total_weight = sum(self.weights[:len(valid_results)])
+            total_weight = sum(self.weights[: len(valid_results)])
             if total_weight == 0:
                 final_score = 0.0
             else:
-                weighted_sum = sum(s * w for s, w in zip(scores, self.weights[:len(valid_results)], strict=False))
+                weighted_sum = sum(s * w for s, w in zip(scores, self.weights[: len(valid_results)], strict=False))
                 final_score = weighted_sum / total_weight
         else:
             final_score = 0.0

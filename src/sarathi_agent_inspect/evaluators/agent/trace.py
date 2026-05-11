@@ -6,10 +6,12 @@ Includes step-level and span-level evaluation.
 
 from __future__ import annotations
 
-import time
 from dataclasses import dataclass, field
+from datetime import UTC, datetime
 from enum import Enum
 from typing import Any
+
+from sarathi_agent_inspect.core.observability import BaseTrace
 
 
 class StepType(Enum):
@@ -23,10 +25,11 @@ class StepType(Enum):
 @dataclass
 class AgentStep:
     """A single atomic unit of agent execution."""
+
     step_id: str
     type: StepType
     content: str
-    timestamp: float = field(default_factory=time.time)
+    timestamp: datetime = field(default_factory=lambda: datetime.now(UTC))
     metadata: dict[str, Any] = field(default_factory=dict)
     latency_ms: float = 0.0
     cost_usd: float = 0.0
@@ -35,37 +38,40 @@ class AgentStep:
 @dataclass
 class AgentSpan:
     """A group of related steps representing a sub-task."""
+
     span_id: str
     name: str
     steps: list[AgentStep] = field(default_factory=list)
     metadata: dict[str, Any] = field(default_factory=dict)
-    start_time: float = field(default_factory=time.time)
-    end_time: float | None = None
+    start_time: datetime = field(default_factory=lambda: datetime.now(UTC))
+    end_time: datetime | None = None
 
     def add_step(self, step: AgentStep) -> None:
         self.steps.append(step)
 
     def complete(self) -> None:
-        self.end_time = time.time()
+        self.end_time = datetime.now(UTC)
 
     @property
     def duration_ms(self) -> float:
         if not self.end_time:
             return 0.0
-        return (self.end_time - self.start_time) * 1000.0
+        return (self.end_time - self.start_time).total_seconds() * 1000.0
 
 
 @dataclass
-class AgentTrace:
+class AgentTrace(BaseTrace):
     """Full execution history of an agent's task."""
-    trace_id: str
-    task_input: str
+
     spans: list[AgentSpan] = field(default_factory=list)
-    metadata: dict[str, Any] = field(default_factory=dict)
-    total_cost_usd: float = 0.0
 
     def add_span(self, span: AgentSpan) -> None:
         self.spans.append(span)
+
+    def complete(self) -> None:
+        """Mark the trace as finished."""
+        super().complete()
+        self.total_cost_usd = sum(sum(step.cost_usd for step in span.steps) for span in self.spans)
 
 
 class TraceScorer:

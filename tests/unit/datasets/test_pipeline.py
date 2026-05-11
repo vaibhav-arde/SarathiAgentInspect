@@ -5,7 +5,7 @@ import pytest
 from sarathi_agent_inspect.datasets.pipeline import DatasetPipeline
 
 
-def test_pipeline_filter():
+def test_pipeline_filter() -> None:
     """Test pipeline filtering."""
     data = [
         {"input": "a", "score": 0.5},
@@ -19,7 +19,8 @@ def test_pipeline_filter():
     assert len(results) == 1
     assert results[0]["input"] == "b"
 
-def test_pipeline_map():
+
+def test_pipeline_map() -> None:
     """Test pipeline mapping."""
     data = [{"input": "hello"}]
 
@@ -28,7 +29,8 @@ def test_pipeline_map():
 
     assert results[0]["input"] == "HELLO"
 
-def test_pipeline_deduplicate():
+
+def test_pipeline_deduplicate() -> None:
     """Test pipeline deduplication."""
     data = [
         {"input": "dup"},
@@ -43,7 +45,8 @@ def test_pipeline_deduplicate():
     assert results[0]["input"] == "dup"
     assert results[1]["input"] == "unique"
 
-def test_pipeline_tagging():
+
+def test_pipeline_tagging() -> None:
     """Test pipeline tagging."""
     data = [{"input": "test"}]
 
@@ -57,7 +60,7 @@ def test_pipeline_tagging():
 # ── Batch Tests ─────────────────────────────────────────────────────
 
 
-def test_pipeline_batch_exact_division():
+def test_pipeline_batch_exact_division() -> None:
     """Test batching where records divide evenly."""
     data = [{"id": i} for i in range(6)]
 
@@ -67,7 +70,7 @@ def test_pipeline_batch_exact_division():
     assert len(batches[1]) == 3
 
 
-def test_pipeline_batch_remainder():
+def test_pipeline_batch_remainder() -> None:
     """Test batching with a partial final batch."""
     data = [{"id": i} for i in range(7)]
 
@@ -78,7 +81,7 @@ def test_pipeline_batch_remainder():
     assert len(batches[2]) == 1  # Remainder
 
 
-def test_pipeline_batch_single_item():
+def test_pipeline_batch_single_item() -> None:
     """Test batching with batch_size=1."""
     data = [{"id": 0}, {"id": 1}]
 
@@ -87,7 +90,7 @@ def test_pipeline_batch_single_item():
     assert batches[0] == [{"id": 0}]
 
 
-def test_pipeline_batch_larger_than_dataset():
+def test_pipeline_batch_larger_than_dataset() -> None:
     """Test batching where batch_size exceeds dataset size."""
     data = [{"id": 0}, {"id": 1}]
 
@@ -96,7 +99,7 @@ def test_pipeline_batch_larger_than_dataset():
     assert len(batches[0]) == 2
 
 
-def test_pipeline_batch_invalid_size():
+def test_pipeline_batch_invalid_size() -> None:
     """Test batching with invalid batch_size raises ValueError."""
     data = [{"id": 0}]
 
@@ -107,21 +110,17 @@ def test_pipeline_batch_invalid_size():
         list(DatasetPipeline(data).batch(batch_size=-1))
 
 
-def test_pipeline_batch_empty_source():
+def test_pipeline_batch_empty_source() -> None:
     """Test batching an empty dataset yields nothing."""
     batches = list(DatasetPipeline([]).batch(batch_size=5))
     assert batches == []
 
 
-def test_pipeline_batch_with_filter():
+def test_pipeline_batch_with_filter() -> None:
     """Test batching after filtering (pipeline chaining)."""
     data = [{"id": i, "keep": i % 2 == 0} for i in range(10)]
 
-    batches = list(
-        DatasetPipeline(data)
-        .filter(lambda r: r["keep"])
-        .batch(batch_size=2)
-    )
+    batches = list(DatasetPipeline(data).filter(lambda r: r["keep"]).batch(batch_size=2))
     assert len(batches) == 3  # 5 even numbers / 2 = 2 full + 1 partial
     assert len(batches[0]) == 2
     assert len(batches[2]) == 1
@@ -130,7 +129,7 @@ def test_pipeline_batch_with_filter():
 # ── Sample Tests ────────────────────────────────────────────────────
 
 
-def test_pipeline_sample_subset():
+def test_pipeline_sample_subset() -> None:
     """Test sampling a subset of records."""
     data = [{"id": i} for i in range(100)]
 
@@ -138,7 +137,7 @@ def test_pipeline_sample_subset():
     assert len(result) == 10
 
 
-def test_pipeline_sample_reproducible():
+def test_pipeline_sample_reproducible() -> None:
     """Test that sampling with the same seed is reproducible."""
     data = [{"id": i} for i in range(50)]
 
@@ -147,7 +146,7 @@ def test_pipeline_sample_reproducible():
     assert result1 == result2
 
 
-def test_pipeline_sample_exceeds_total():
+def test_pipeline_sample_exceeds_total() -> None:
     """Test sampling more than available returns all records."""
     data = [{"id": 0}, {"id": 1}]
 
@@ -155,7 +154,7 @@ def test_pipeline_sample_exceeds_total():
     assert len(result) == 2
 
 
-def test_pipeline_sample_different_seeds():
+def test_pipeline_sample_different_seeds() -> None:
     """Test that different seeds produce different samples."""
     data = [{"id": i} for i in range(100)]
 
@@ -167,7 +166,7 @@ def test_pipeline_sample_different_seeds():
 # ── Head Tests ──────────────────────────────────────────────────────
 
 
-def test_pipeline_head():
+def test_pipeline_head() -> None:
     """Test head returns first N records."""
     data = [{"id": i} for i in range(20)]
 
@@ -177,7 +176,7 @@ def test_pipeline_head():
     assert result[4]["id"] == 4
 
 
-def test_pipeline_head_exceeds_total():
+def test_pipeline_head_exceeds_total() -> None:
     """Test head with N larger than dataset."""
     data = [{"id": 0}]
 
@@ -185,10 +184,9 @@ def test_pipeline_head_exceeds_total():
     assert len(result) == 1
 
 
-def test_pipeline_head_default():
+def test_pipeline_head_default() -> None:
     """Test head with default N=10."""
     data = [{"id": i} for i in range(20)]
 
     result = DatasetPipeline(data).head()
     assert len(result) == 10
-
