@@ -82,3 +82,15 @@ class AnthropicProvider(BaseProvider):
         """Stream a response using Anthropic (Not implemented)."""
         raise NotImplementedError("AnthropicProvider generate_stream is not implemented yet.")
         yield ""  # required for the generator signature
+
+    async def embed(self, text: str | list[str]) -> list[float] | list[list[float]]:
+        """Generate vector embeddings (Not implemented)."""
+        raise NotImplementedError("AnthropicProvider embed is not implemented yet.")
+
+    def get_token_count(self, text: str) -> int:
+        """Calculate token count (Not implemented)."""
+        raise NotImplementedError("AnthropicProvider get_token_count is not implemented yet.")
+
+    def get_cost(self, prompt_tokens: int, completion_tokens: int) -> float:
+        """Calculate cost (Not implemented)."""
+        raise NotImplementedError("AnthropicProvider get_cost is not implemented yet.")

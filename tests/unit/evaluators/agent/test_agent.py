@@ -18,7 +18,7 @@ from sarathi_agent_inspect.evaluators.agent import (
 
 def test_agent_trace_efficiency():
     """Test the efficiency scoring of an agent trace."""
-    trace = AgentTrace(trace_id="t1", task_input="Find a flight")
+    trace = AgentTrace(trace_id="t1", input_text="Find a flight")
     span = AgentSpan(span_id="s1", name="search")
 
     # 1 thought followed by 1 action = 1.0 efficiency
@@ -79,7 +79,7 @@ def test_infinite_loop_protector():
 
 def test_memory_retention():
     """Test if agent remembers facts from earlier steps."""
-    trace = AgentTrace(trace_id="t1", task_input="Test memory")
+    trace = AgentTrace(trace_id="t1", input_text="Test memory")
     span = AgentSpan(span_id="s1", name="mem")
     span.add_step(AgentStep(step_id="1", type=StepType.OBSERVATION, content="The user's age is 30"))
     span.add_step(
@@ -98,7 +98,7 @@ def test_memory_retention():
 
 def test_replay_engine_mock_generation():
     """Test extraction of mock responses from a trace."""
-    trace = AgentTrace(trace_id="t1", task_input="Replay test")
+    trace = AgentTrace(trace_id="t1", input_text="Replay test")
     span = AgentSpan(span_id="s1", name="replay")
     span.add_step(AgentStep(step_id="1", type=StepType.ACTION, content="get_weather(city='London')"))
     span.add_step(AgentStep(step_id="2", type=StepType.OBSERVATION, content="Sunny, 20C"))

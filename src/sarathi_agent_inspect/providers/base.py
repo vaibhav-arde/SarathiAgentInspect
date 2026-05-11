@@ -194,6 +194,43 @@ class BaseProvider(ABC):
         """
         ...
 
+    @abstractmethod
+    async def embed(self, text: str | list[str]) -> list[float] | list[list[float]]:
+        """Generate vector embeddings for the given text.
+
+        Args:
+            text: Single string or list of strings to embed.
+
+        Returns:
+            List of floats (single) or list of list of floats (batch).
+        """
+        ...
+
+    @abstractmethod
+    def get_token_count(self, text: str) -> int:
+        """Calculate the number of tokens in the given text.
+
+        Args:
+            text: The text to tokenize.
+
+        Returns:
+            Token count.
+        """
+        ...
+
+    @abstractmethod
+    def get_cost(self, prompt_tokens: int, completion_tokens: int) -> float:
+        """Calculate estimated cost in USD based on token counts.
+
+        Args:
+            prompt_tokens: Input tokens.
+            completion_tokens: Output tokens.
+
+        Returns:
+            Estimated cost in USD.
+        """
+        ...
+
     async def shutdown(self) -> None:  # noqa: B027
         """Clean up provider resources.
 

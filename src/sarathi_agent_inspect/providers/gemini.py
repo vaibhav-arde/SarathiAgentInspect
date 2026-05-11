@@ -189,6 +189,38 @@ class GeminiProvider(BaseProvider):
             raw_response=response.model_dump() if hasattr(response, "model_dump") else {},
         )
 
+    async def embed(self, text: str | list[str]) -> list[float] | list[list[float]]:
+        """Generate vector embeddings using Gemini."""
+        if not self._client:
+            await self.initialize()
+
+        # The SDK supports list[str] natively
+        response = await self._client.aio.models.embed_content(
+            model="text-embedding-004",  # Default embedding model for Gemini
+            contents=text,
+        )
+        
+        if isinstance(text, str):
+            return response.embeddings[0].values
+        return [e.values for e in response.embeddings]
+
+    def get_token_count(self, text: str) -> int:
+        """Calculate token count using Gemini's native API."""
+        if not self._client:
+            # Fallback to word count if client not initialized
+            return len(text.split())
+        
+        # This is a sync call in the SDK
+        response = self._client.models.count_tokens(
+            model=self._model,
+            contents=text,
+        )
+        return response.total_tokens
+
+    def get_cost(self, prompt_tokens: int, completion_tokens: int) -> float:
+        """Return cost using central estimator."""
+        return estimate_cost(self._model, prompt_tokens, completion_tokens, self.provider_name)
+
     async def generate_stream(
         self,
         prompt: str,
