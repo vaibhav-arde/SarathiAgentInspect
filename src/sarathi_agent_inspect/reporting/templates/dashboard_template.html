@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sarathi Enterprise Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #6366f1; --bg: #f8fafc; --card: #ffffff; --border: #e2e8f0; --text: #1e293b; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 2rem; }
+        h1 { font-family: 'Outfit', sans-serif; font-size: 2.5rem; margin-bottom: 2rem; }
+        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2rem; }
+        .card { background: var(--card); border: 1px solid var(--border); border-radius: 1rem; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
+        .chart-container { height: 400px; margin-top: 1rem; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Sarathi Performance Dashboard</h1>
+        
+        <div class="grid">
+            <div class="card">
+                <h3>Pass Rate Trend</h3>
+                <div class="chart-container">
+                    <canvas id="passRateTrendChart"></canvas>
+                </div>
+            </div>
+            <div class="card">
+                <h3>Cost Trend (USD)</h3>
+                <div class="chart-container">
+                    <canvas id="costTrendChart"></canvas>
+                </div>
+            </div>
+            <div class="card">
+                <h3>Latency Trend (ms)</h3>
+                <div class="chart-container">
+                    <canvas id="latencyTrendChart"></canvas>
+                </div>
+            </div>
+            <div class="card">
+                <h3>Evaluation Volume</h3>
+                <div class="chart-container">
+                    <canvas id="volumeChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const history = {{ history_json | safe }};
+        const labels = history.map(run => run.metadata.timestamp.split('T')[0]);
+        
+        // Pass Rate Chart
+        new Chart(document.getElementById('passRateTrendChart'), {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Pass Rate',
+                    data: history.map(run => run.pass_rate * 100),
+                    borderColor: '#10b981',
+                    tension: 0.3,
+                    fill: true,
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)'
+                }]
+            },
+            options: { maintainAspectRatio: false }
+        });
+
+        // Cost Chart
+        new Chart(document.getElementById('costTrendChart'), {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Total Cost (USD)',
+                    data: history.map(run => run.metadata.total_cost_usd),
+                    borderColor: '#f59e0b',
+                    tension: 0.3
+                }]
+            },
+            options: { maintainAspectRatio: false }
+        });
+
+        // Latency Chart
+        new Chart(document.getElementById('latencyTrendChart'), {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Avg Latency (ms)',
+                    data: history.map(run => run.metadata.total_latency_ms / (run.total_records || 1)),
+                    borderColor: '#6366f1',
+                    tension: 0.3
+                }]
+            },
+            options: { maintainAspectRatio: false }
+        });
+
+        // Volume Chart
+        new Chart(document.getElementById('volumeChart'), {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Total Records Evaluated',
+                    data: history.map(run => run.total_records),
+                    backgroundColor: '#334155'
+                }]
+            },
+            options: { maintainAspectRatio: false }
+        });
+    </script>
+</body>
+</html>

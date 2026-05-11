@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sarathi Evaluation Report - {{ summary.metadata.run_id }}</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --text: #1e293b;
+            --text-light: #64748b;
+            --border: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            color: white;
+            padding: 3rem 0;
+            margin-bottom: 2rem;
+            border-bottom: 4px solid var(--primary);
+        }
+
+        h1, h2, h3 {
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .badge-success { background: #dcfce7; color: #166534; }
+        .badge-danger { background: #fee2e2; color: #991b1b; }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin: 0.5rem 0;
+        }
+
+        .metric-label {
+            color: var(--text-light);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .chart-container {
+            height: 300px;
+            position: relative;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        th {
+            text-align: left;
+            background: #f1f5f9;
+            padding: 1rem;
+            font-size: 0.875rem;
+            color: var(--text-light);
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.9375rem;
+        }
+
+        tr:hover { background-color: #f8fafc; }
+
+        .score-bar {
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+            width: 100px;
+        }
+
+        .score-fill {
+            height: 100%;
+            background: var(--primary);
+        }
+
+        .details-row {
+            display: none;
+            background: #f1f5f9;
+        }
+
+        .reasoning {
+            font-style: italic;
+            color: var(--text-light);
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="container">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h1>Sarathi Evaluation Run</h1>
+                <p style="opacity: 0.8;">ID: {{ summary.metadata.run_id }} • {{ summary.metadata.timestamp }}</p>
+            </div>
+            <div>
+                <span class="badge {% if summary.pass_rate >= 0.8 %}badge-success{% else %}badge-danger{% endif %}" style="font-size: 1.25rem;">
+                    {{ (summary.pass_rate * 100)|round(1) }}% PASS RATE
+                </span>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="container">
+    <!-- Summary Metrics -->
+    <div class="grid">
+        <div class="card">
+            <div class="metric-label">Total Records</div>
+            <div class="metric-value">{{ summary.total_records }}</div>
+        </div>
+        <div class="card">
+            <div class="metric-label">Passed / Failed</div>
+            <div class="metric-value">
+                <span style="color: var(--success)">{{ summary.passed_count }}</span> / 
+                <span style="color: var(--danger)">{{ summary.failed_count }}</span>
+            </div>
+        </div>
+        <div class="card">
+            <div class="metric-label">Avg. Score</div>
+            <div class="metric-value">{{ summary.average_score|round(3) }}</div>
+        </div>
+        <div class="card">
+            <div class="metric-label">Total Cost (Est)</div>
+            <div class="metric-value">${{ summary.metadata.total_cost_usd|round(4) }}</div>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="grid" style="grid-template-columns: 1fr 1fr;">
+        <div class="card">
+            <h3>Pass/Fail Distribution</h3>
+            <div class="chart-container">
+                <canvas id="passFailChart"></canvas>
+            </div>
+        </div>
+        <div class="card">
+            <h3>Score Distribution</h3>
+            <div class="chart-container">
+                <canvas id="scoreChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Results -->
+    <div class="card" style="padding: 0;">
+        <div style="padding: 1.5rem;">
+            <h3>Detailed Results</h3>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Test Case</th>
+                    <th>Score</th>
+                    <th>Status</th>
+                    <th>Cost</th>
+                    <th>Latency</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for res in results %}
+                <tr onclick="toggleDetails('details-{{ loop.index }}')" style="cursor: pointer;">
+                    <td><strong>{{ res.test_id or res.name or 'Test ' ~ loop.index }}</strong></td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            {{ res.score|round(2) }}
+                            <div class="score-bar"><div class="score-fill" style="width: {{ res.score * 100 }}%"></div></div>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="badge {% if res.passed %}badge-success{% else %}badge-danger{% endif %}">
+                            {{ 'PASSED' if res.passed else 'FAILED' }}
+                        </span>
+                    </td>
+                    <td>${{ (res.cost or 0.0)|round(5) }}</td>
+                    <td>{{ (res.latency or 0.0)|round(1) }}ms</td>
+                </tr>
+                <tr id="details-{{ loop.index }}" class="details-row">
+                    <td colspan="5">
+                        <div style="padding: 1rem;">
+                            <p><strong>Input:</strong> {{ res.input_text or res.input or 'N/A' }}</p>
+                            <p><strong>Output:</strong> {{ res.actual_output or res.output or 'N/A' }}</p>
+                            {% if res.reason %}
+                            <p class="reasoning"><strong>Reason:</strong> {{ res.reason }}</p>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    function toggleDetails(id) {
+        const row = document.getElementById(id);
+        row.style.display = row.style.display === 'table-row' ? 'none' : 'table-row';
+    }
+
+    // Pass/Fail Chart
+    new Chart(document.getElementById('passFailChart'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Passed', 'Failed'],
+            datasets: [{
+                data: [{{ summary.passed_count }}, {{ summary.failed_count }}],
+                backgroundColor: ['#10b981', '#ef4444'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom' }
+            }
+        }
+    });
+
+    // Score Chart (Simplified Histogram)
+    new Chart(document.getElementById('scoreChart'), {
+        type: 'bar',
+        data: {
+            labels: ['0-0.2', '0.2-0.4', '0.4-0.6', '0.6-0.8', '0.8-1.0'],
+            datasets: [{
+                label: 'Count',
+                data: [
+                    {{ results|selectattr('score', 'lt', 0.2)|list|length }},
+                    {{ results|selectattr('score', 'ge', 0.2)|selectattr('score', 'lt', 0.4)|list|length }},
+                    {{ results|selectattr('score', 'ge', 0.4)|selectattr('score', 'lt', 0.6)|list|length }},
+                    {{ results|selectattr('score', 'ge', 0.6)|selectattr('score', 'lt', 0.8)|list|length }},
+                    {{ results|selectattr('score', 'ge', 0.8)|list|length }}
+                ],
+                backgroundColor: '#6366f1'
+            }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            scales: {
+                y: { beginAtZero: true, ticks: { stepSize: 1 } }
+            }
+        }
+    });
+</script>
+
+</body>
+</html>
