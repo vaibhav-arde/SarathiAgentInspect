@@ -35,12 +35,12 @@ class HistoricalTracker:
         except Exception as e:
             logger.error(f"Failed to record run to history: {e}")
 
-    def load_history(self, limit: int = 50) -> list[EvaluationSummary]:
+    def load_history(self, limit: int = 50) -> list[dict[str, Any]]:
         """Load the most recent historical runs."""
         if not self.history_file.exists():
             return []
 
-        runs: list[EvaluationSummary] = []
+        runs: list[dict[str, Any]] = []
         try:
             with open(self.history_file) as f:
                 for line in f:
