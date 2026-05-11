@@ -16,19 +16,26 @@ except ImportError:
     WebClient = None  # type: ignore
     SlackApiError = None  # type: ignore
 
+from typing import TYPE_CHECKING
+
 import httpx
+
+if TYPE_CHECKING:
+    from sarathi_agent_inspect.reporting.base import EvaluationSummary
+from sarathi_agent_inspect.reporting.notifications_registry import BaseNotifier, NotifierRegistry
 
 logger = logging.getLogger(__name__)
 
 
-class SlackNotifier:
+@NotifierRegistry.register("slack")
+class SlackNotifier(BaseNotifier):
     """Sends evaluation summaries to Slack."""
 
     def __init__(self, token: str, channel: str) -> None:
         self.client = WebClient(token=token) if WebClient is not None else None
         self.channel = channel
 
-    def send_summary(self, summary: Any, trend: dict[str, Any] | None = None) -> None:
+    def send_summary(self, summary: EvaluationSummary, trend: dict[str, Any] | None = None) -> None:
         """Send a formatted Slack message with the run summary."""
         if not self.client:
             logger.warning("Slack SDK not installed. Skipping notification.")
@@ -67,13 +74,19 @@ class SlackNotifier:
             logger.error(f"Failed to send Slack notification: {e}")
 
 
-class TeamsNotifier:
+@NotifierRegistry.register("teams")
+class TeamsNotifier(BaseNotifier):
     """Sends evaluation summaries to MS Teams via Webhooks."""
 
     def __init__(self, webhook_url: str) -> None:
         self.webhook_url = webhook_url
 
-    async def send_summary(self, summary: Any) -> None:
+    def send_summary(self, summary: EvaluationSummary, trend: dict[str, Any] | None = None) -> None:
+        """Send a message to Teams (blocking wrapper for adaptive cards)."""
+        import asyncio
+        asyncio.run(self._send_summary_async(summary))
+
+    async def _send_summary_async(self, summary: EvaluationSummary) -> None:
         """Send a message to Teams."""
         payload = {
             "type": "message",

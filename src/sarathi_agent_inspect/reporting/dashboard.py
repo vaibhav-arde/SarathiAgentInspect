@@ -8,9 +8,12 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING
 
 from jinja2 import Environment, FileSystemLoader
+
+if TYPE_CHECKING:
+    from sarathi_agent_inspect.reporting.base import EvaluationSummary
 
 
 class DashboardGenerator:
@@ -24,13 +27,15 @@ class DashboardGenerator:
             autoescape=True
         )
 
-    def generate(self, history: list[Any]) -> Path:
+    def generate(self, history: list[EvaluationSummary]) -> Path:
         """Generate the dashboard from historical data."""
         template = self.env.get_template("dashboard_template.html")
 
-        # history is a list of dicts from HistoricalTracker
+        # Convert Pydantic objects to dicts for JSON serialization
+        history_dicts = [run.model_dump() for run in history]
+
         html_content = template.render(
-            history_json=json.dumps(history, default=str),
+            history_json=json.dumps(history_dicts, default=str),
         )
 
         self.output_path.parent.mkdir(parents=True, exist_ok=True)

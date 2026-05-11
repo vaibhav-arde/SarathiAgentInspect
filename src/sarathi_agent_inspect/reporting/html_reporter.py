@@ -28,18 +28,26 @@ class HTMLReporter(BaseReporter):
 
     def generate(self, results: list[Any], summary: EvaluationSummary) -> Path:
         """Generate an HTML report file."""
+        from sarathi_agent_inspect.core.sanitizer import InputSanitizer
+
         template = self.env.get_template("report_template.html")
 
-        # Ensure results have defaults for missing keys to prevent template errors
+        # Ensure results have defaults and are sanitized
         normalized_results = []
         for r in results:
             if isinstance(r, dict):
-                normalized_results.append(r)
+                res_dict = r
             elif hasattr(r, "to_dict"):
-                normalized_results.append(r.to_dict())
+                res_dict = r.to_dict()
             else:
-                # Fallback for arbitrary objects
-                normalized_results.append(vars(r))
+                res_dict = vars(r)
+
+            # Sanitize sensitive fields if present
+            for field in ["input_text", "actual_output", "input", "output"]:
+                if field in res_dict and isinstance(res_dict[field], str):
+                    res_dict[field] = InputSanitizer.sanitize(res_dict[field])
+
+            normalized_results.append(res_dict)
 
         html_content = template.render(
             results=normalized_results,

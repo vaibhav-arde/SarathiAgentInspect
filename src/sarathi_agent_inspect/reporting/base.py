@@ -7,26 +7,25 @@ different formats (JSON, HTML, Allure).
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import Any
 
+from pydantic import BaseModel, Field
 
-@dataclass
-class ReportMetadata:
+
+class ReportMetadata(BaseModel):
     """Metadata about an evaluation run."""
 
     run_id: str
-    timestamp: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
+    timestamp: str = Field(default_factory=lambda: datetime.now(UTC).isoformat())
     environment: str = "local"
     framework_version: str = "0.1.0"
-    tags: list[str] = field(default_factory=list)
+    tags: list[str] = Field(default_factory=list)
     total_cost_usd: float = 0.0
     total_latency_ms: float = 0.0
 
 
-@dataclass
-class EvaluationSummary:
+class EvaluationSummary(BaseModel):
     """Aggregated summary of an evaluation run."""
 
     total_records: int

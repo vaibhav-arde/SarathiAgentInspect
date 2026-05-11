@@ -8,12 +8,10 @@ from __future__ import annotations
 
 import json
 import logging
-from dataclasses import asdict
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
-if TYPE_CHECKING:
-    from sarathi_agent_inspect.reporting.base import EvaluationSummary
+from sarathi_agent_inspect.reporting.base import EvaluationSummary
 
 logger = logging.getLogger(__name__)
 
@@ -29,26 +27,24 @@ class HistoricalTracker:
         """Append a run summary to the historical log."""
         try:
             with open(self.history_file, "a") as f:
-                data = asdict(summary)
+                data = summary.model_dump()
                 f.write(json.dumps(data, default=str) + "\n")
             logger.info(f"Recorded evaluation run {summary.metadata.run_id} to history.")
         except Exception as e:
             logger.error(f"Failed to record run to history: {e}")
 
-    def load_history(self, limit: int = 50) -> list[dict[str, Any]]:
+    def load_history(self, limit: int = 50) -> list[EvaluationSummary]:
         """Load the most recent historical runs."""
         if not self.history_file.exists():
             return []
 
-        runs: list[dict[str, Any]] = []
+        runs: list[EvaluationSummary] = []
         try:
             with open(self.history_file) as f:
                 for line in f:
                     if line.strip():
                         data = json.loads(line)
-                        # Reconstruct metadata and summary
-                        # In a real setup, we'd use a robust mapper or Pydantic
-                        runs.append(data)  # Returning raw dicts for now to keep it simple
+                        runs.append(EvaluationSummary.model_validate(data))
             # Return last N runs
             return runs[-limit:]
         except Exception as e:
@@ -60,7 +56,7 @@ class TrendAnalyzer:
     """Calculates performance deltas and trends from historical data."""
 
     @staticmethod
-    def calculate_trends(current: EvaluationSummary, history: list[Any]) -> dict[str, Any]:
+    def calculate_trends(current: EvaluationSummary, history: list[EvaluationSummary]) -> dict[str, Any]:
         """Compare current run against historical average or baseline."""
         if not history:
             return {"status": "first_run", "pass_rate_delta": 0.0, "cost_delta": 0.0}
@@ -68,9 +64,8 @@ class TrendAnalyzer:
         # Use the most recent run as baseline for now
         baseline = history[-1]
 
-        # Safe access for nested baseline data
-        baseline_pass_rate = baseline.get("pass_rate", 0.0)
-        baseline_cost = baseline.get("metadata", {}).get("total_cost_usd", 0.0)
+        baseline_pass_rate = baseline.pass_rate
+        baseline_cost = baseline.metadata.total_cost_usd
 
         pass_rate_delta = current.pass_rate - baseline_pass_rate
         cost_delta = current.metadata.total_cost_usd - baseline_cost

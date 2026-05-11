@@ -68,12 +68,19 @@ def test_historical_tracker(tmp_path: Path, sample_summary: EvaluationSummary) -
 
     history = tracker.load_history()
     assert len(history) == 2
-    assert history[0]["metadata"]["run_id"] == "run_123"
+    assert history[0].metadata.run_id == "run_123"
 
 
 def test_trend_analyzer(sample_summary: EvaluationSummary) -> None:
     history = [
-        {"pass_rate": 0.7, "metadata": {"total_cost_usd": 0.04}}
+        EvaluationSummary(
+            total_records=10,
+            passed_count=7,
+            failed_count=3,
+            pass_rate=0.7,
+            average_score=0.75,
+            metadata=ReportMetadata(run_id="old_run", total_cost_usd=0.04)
+        )
     ]
 
     trends = TrendAnalyzer.calculate_trends(sample_summary, history)
