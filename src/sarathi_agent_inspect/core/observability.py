@@ -88,7 +88,9 @@ class BaseTrace:
             test_id=self.test_id,
             trace_id=self.trace_id,
         )
-        return InputSanitizer.sanitize_for_export(payload)
+        from typing import cast
+
+        return cast("dict[str, Any]", InputSanitizer.sanitize_for_export(payload))
 
 
 class EvaluationSession:

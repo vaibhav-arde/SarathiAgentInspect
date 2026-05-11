@@ -18,7 +18,7 @@
 <body>
     <div class="container">
         <h1>Sarathi Performance Dashboard</h1>
-        
+
         <div class="grid">
             <div class="card">
                 <h3>Pass Rate Trend</h3>
@@ -50,7 +50,7 @@
     <script>
         const history = {{ history_json | safe }};
         const labels = history.map(run => run.metadata.timestamp.split('T')[0]);
-        
+
         // Pass Rate Chart
         new Chart(document.getElementById('passRateTrendChart'), {
             type: 'line',

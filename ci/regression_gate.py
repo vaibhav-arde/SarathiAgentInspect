@@ -42,7 +42,7 @@ def _summary_from_pytest_report(data: dict[str, Any]) -> EvaluationSummary:
     if not isinstance(pytest_summary, dict):
         raise ValueError("pytest JSON report is missing a summary object")
 
-    total = int(pytest_summary.get("total", pytest_summary.get("collected", 0)))
+    total = int(pytest_summary.get("total") or pytest_summary.get("collected") or 0)
     passed = int(pytest_summary.get("passed", 0))
     failed = sum(int(pytest_summary.get(key, 0)) for key in ("failed", "error", "xfailed", "xpassed"))
     if failed == 0 and total >= passed:

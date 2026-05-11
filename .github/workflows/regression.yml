@@ -28,10 +28,10 @@ jobs:
       - uses: astral-sh/setup-uv@v4
         with:
           enable-cache: true
-          
+
       - run: uv python install 3.13
       - run: uv sync --all-extras
-      
+
       - name: Run Full Regression
         run: |
           uv run pytest tests/ -m "integration or slow" --json-report --json-report-file=report.json
@@ -40,7 +40,7 @@ jobs:
           OLLAMA_BASE_URL: ${{ secrets.OLLAMA_BASE_URL }}
           OLLAMA_MODEL: ${{ vars.OLLAMA_MODEL || 'gemma4:31b-cloud' }}
           SARATHI_JUDGE_MODEL: ${{ vars.JUDGE_MODEL || 'gemma4:31b-cloud' }}
-          
+
       - name: Enforce Quality Gates
         if: github.event_name == 'pull_request'
         run: |
@@ -63,7 +63,7 @@ jobs:
             .sarathi/history.jsonl
             .sarathi/baselines
           key: sarathi-regression-${{ runner.os }}-${{ github.ref_name }}-${{ github.run_id }}
-          
+
       - name: Upload Artifacts
         if: always()
         uses: actions/upload-artifact@v4

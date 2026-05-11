@@ -53,6 +53,7 @@ dev = [
     "ruff>=0.8",
     "mypy>=1.13",
     "black>=24.0",
+    "pre-commit>=4.0.0",
     "types-PyYAML>=6.0",
 ]
 
@@ -133,7 +134,6 @@ mypy_path = "src"
 [[tool.mypy.overrides]]
 module = [
     "deepeval.*",
-    "langfuse.*",
 ]
 ignore_missing_imports = true
 

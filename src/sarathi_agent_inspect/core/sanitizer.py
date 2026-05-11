@@ -84,7 +84,7 @@ class InputSanitizer:
         if isinstance(value, tuple):
             return [cls.sanitize_for_export(item, field_name=field_name) for item in value]
 
-        if is_dataclass(value):
+        if is_dataclass(value) and not isinstance(value, type):
             return cls.sanitize_for_export(asdict(value), field_name=field_name)
 
         if hasattr(value, "model_dump"):
