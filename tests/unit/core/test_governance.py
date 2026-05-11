@@ -18,12 +18,14 @@ def sample_summary() -> EvaluationSummary:
     )
 
 
+@pytest.mark.smoke
 def test_quality_gate_pass(sample_summary: EvaluationSummary) -> None:
     config = GateConfig(min_pass_rate=0.75, min_average_score=0.8)
     result = QualityGate.check(sample_summary, config)
     assert result.passed is True
 
 
+@pytest.mark.smoke
 def test_quality_gate_fail_pass_rate(sample_summary: EvaluationSummary) -> None:
     config = GateConfig(min_pass_rate=0.9)
     result = QualityGate.check(sample_summary, config)
@@ -31,6 +33,7 @@ def test_quality_gate_fail_pass_rate(sample_summary: EvaluationSummary) -> None:
     assert "Pass rate 80.0% is below threshold 90.0%" in result.reason
 
 
+@pytest.mark.smoke
 def test_regression_blocker_pass(sample_summary: EvaluationSummary) -> None:
     history = [
         EvaluationSummary(
@@ -48,6 +51,7 @@ def test_regression_blocker_pass(sample_summary: EvaluationSummary) -> None:
     assert "Performance stable" in result.reason
 
 
+@pytest.mark.smoke
 def test_regression_blocker_fail(sample_summary: EvaluationSummary) -> None:
     history = [
         EvaluationSummary(
