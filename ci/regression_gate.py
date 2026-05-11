@@ -44,10 +44,7 @@ def _summary_from_pytest_report(data: dict[str, Any]) -> EvaluationSummary:
 
     total = int(pytest_summary.get("total", pytest_summary.get("collected", 0)))
     passed = int(pytest_summary.get("passed", 0))
-    failed = sum(
-        int(pytest_summary.get(key, 0))
-        for key in ("failed", "error", "xfailed", "xpassed")
-    )
+    failed = sum(int(pytest_summary.get(key, 0)) for key in ("failed", "error", "xfailed", "xpassed"))
     if failed == 0 and total >= passed:
         failed = total - passed
 
@@ -155,7 +152,7 @@ def main() -> None:
         print(f"✅ Baseline snapshot '{info.snapshot_id}' saved to {info.path}")
         sys.exit(0)
 
-    # Action: check
+    # Workflow: Check for regressions
     config = GateConfig(
         min_pass_rate=args.min_pass_rate,
         min_average_score=args.min_average_score,
@@ -190,9 +187,7 @@ def main() -> None:
             data = json.load(f)
         if "tests" in data:
             for test in data["tests"]:
-                current_scores[test.get("nodeid", "unknown")] = (
-                    1.0 if test.get("outcome") == "passed" else 0.0
-                )
+                current_scores[test.get("nodeid", "unknown")] = 1.0 if test.get("outcome") == "passed" else 0.0
         else:
             for res in data.get("results", []):
                 current_scores[res.get("test_id", "unknown")] = res.get("score", 0.0)

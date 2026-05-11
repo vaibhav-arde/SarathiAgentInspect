@@ -107,9 +107,9 @@ class EvaluationSession:
         self.total_cost_usd: float = 0.0
         self.metadata: dict[str, Any] = merge_observability_metadata(
             {
-            "environment": environment,
-            "git_commit": "unknown",  # Can be injected
-            "user": "vaibhav-arde",
+                "environment": environment,
+                "git_commit": "unknown",  # Can be injected
+                "user": "vaibhav-arde",
             },
             run_id=self.run_id,
             session_id=self.session_id,

@@ -14,7 +14,7 @@ def sample_summary() -> EvaluationSummary:
         failed_count=2,
         pass_rate=0.8,
         average_score=0.85,
-        metadata=ReportMetadata(run_id="run_1", total_cost_usd=0.05)
+        metadata=ReportMetadata(run_id="run_1", total_cost_usd=0.05),
     )
 
 
@@ -42,7 +42,7 @@ def test_regression_blocker_pass(sample_summary: EvaluationSummary) -> None:
             failed_count=3,
             pass_rate=0.7,
             average_score=0.75,
-            metadata=ReportMetadata(run_id="old_run")
+            metadata=ReportMetadata(run_id="old_run"),
         )
     ]
     config = GateConfig(regression_threshold=-0.05)
@@ -58,9 +58,9 @@ def test_regression_blocker_fail(sample_summary: EvaluationSummary) -> None:
             total_records=10,
             passed_count=9,
             failed_count=1,
-            pass_rate=0.9, # Drop from 0.9 to 0.8 is 10%
+            pass_rate=0.9,  # Drop from 0.9 to 0.8 is 10%
             average_score=0.95,
-            metadata=ReportMetadata(run_id="old_run")
+            metadata=ReportMetadata(run_id="old_run"),
         )
     ]
     config = GateConfig(regression_threshold=-0.05)

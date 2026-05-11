@@ -76,10 +76,7 @@ class InputSanitizer:
         across nested dict/list artifacts.
         """
         if isinstance(value, dict):
-            return {
-                key: cls.sanitize_for_export(item, field_name=key)
-                for key, item in value.items()
-            }
+            return {key: cls.sanitize_for_export(item, field_name=key) for key, item in value.items()}
 
         if isinstance(value, list):
             return [cls.sanitize_for_export(item, field_name=field_name) for item in value]
