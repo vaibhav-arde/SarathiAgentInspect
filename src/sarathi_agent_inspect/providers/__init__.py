@@ -1,7 +1,13 @@
 """Provider implementations for SarathiAgentInspect."""
 
 from sarathi_agent_inspect.providers.anthropic_provider import AnthropicProvider
-from sarathi_agent_inspect.providers.base import BaseProvider, ModelInfo, ProviderResponse
+from sarathi_agent_inspect.providers.base import (
+    BaseProvider,
+    ModelInfo,
+    ProviderCapabilities,
+    ProviderFeature,
+    ProviderResponse,
+)
 from sarathi_agent_inspect.providers.cost import ModelPricing, estimate_cost, get_pricing
 from sarathi_agent_inspect.providers.gemini import GeminiProvider
 from sarathi_agent_inspect.providers.judge import get_judge_provider
@@ -15,20 +21,18 @@ __all__ = [
     "BaseProvider",
     "GeminiProvider",
     "ModelInfo",
-    # Cost & Tokens
     "ModelPricing",
-    # Providers
     "OllamaProvider",
     "OpenAIProvider",
+    "ProviderCapabilities",
     "ProviderFactory",
-    # Registry
+    "ProviderFeature",
     "ProviderRegistry",
     "ProviderResponse",
     "TokenTracker",
     "TokenUsage",
     "estimate_cost",
     "format_token_report",
-    # Judge
     "get_judge_provider",
     "get_pricing",
     "register_provider",

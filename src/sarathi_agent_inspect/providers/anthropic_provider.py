@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from sarathi_agent_inspect.providers.base import BaseProvider, ModelInfo, ProviderResponse
+from sarathi_agent_inspect.providers.base import BaseProvider, ModelInfo, ProviderCapabilities, ProviderResponse
 from sarathi_agent_inspect.providers.registry import register_provider
 
 if TYPE_CHECKING:
@@ -56,6 +56,19 @@ class AnthropicProvider(BaseProvider):
             model=self._model,
             supports_streaming=True,
             supports_tools=True,
+        )
+
+    def get_capabilities(self) -> ProviderCapabilities:
+        """Declare the provider as unavailable until implementation lands."""
+        return ProviderCapabilities(
+            ready=False,
+            supports_generation=False,
+            supports_streaming=False,
+            supports_embeddings=False,
+            supports_token_count=False,
+            supports_cost_estimation=False,
+            supports_tools=False,
+            notes="Anthropic integration is still a stub implementation.",
         )
 
     async def generate(

@@ -23,6 +23,8 @@ class ReportMetadata(BaseModel):
     tags: list[str] = Field(default_factory=list)
     total_cost_usd: float = 0.0
     total_latency_ms: float = 0.0
+    trace_id: str | None = None
+    test_ids: list[str] = Field(default_factory=list)
 
 
 class EvaluationSummary(BaseModel):

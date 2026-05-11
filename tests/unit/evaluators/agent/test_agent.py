@@ -12,6 +12,7 @@ from sarathi_agent_inspect.evaluators.agent import (
     StepType,
     ToolEvaluator,
     TraceScorer,
+    WorkflowEvaluator,
 )
 
 
@@ -116,3 +117,49 @@ def test_reasoning_redundancy() -> None:
     score = ReasoningEvaluator.detect_redundancy(thoughts)
     # 2 unique / 3 total = 0.66
     assert 0.6 < score < 0.7
+
+
+def test_workflow_evaluator_scores_terminal_outcome() -> None:
+    """Workflow success should reflect the final state, not the original input."""
+    trace = AgentTrace(trace_id="trace-1", input_text="Book a demo", metadata={"task_completed": True})
+    span = AgentSpan(span_id="span-1", name="booking")
+    span.add_step(AgentStep(step_id="1", type=StepType.THOUGHT, content="I should schedule a demo"))
+    span.add_step(AgentStep(step_id="2", type=StepType.ACTION, content="calendar.create_event()"))
+    span.add_step(
+        AgentStep(
+            step_id="3",
+            type=StepType.OBSERVATION,
+            content="Demo booked successfully for tomorrow at 10am",
+            metadata={"status": "success"},
+        )
+    )
+    trace.add_span(span)
+
+    result = WorkflowEvaluator().evaluate(
+        trace,
+        "demo booked successfully",
+        required_tools=["calendar.create_event"],
+    )
+
+    assert result.success is True
+    assert result.score >= 0.7
+    assert result.outcome_match_score > 0.8
+
+
+def test_workflow_evaluator_penalizes_errors() -> None:
+    """Workflow scoring should drop when the trace ends in failure."""
+    trace = AgentTrace(trace_id="trace-2", input_text="Reset the account password")
+    span = AgentSpan(span_id="span-2", name="reset")
+    span.add_step(AgentStep(step_id="1", type=StepType.ACTION, content="accounts.reset_password()"))
+    span.add_step(AgentStep(step_id="2", type=StepType.ERROR, content="Reset failed due to missing permissions"))
+    trace.add_span(span)
+
+    result = WorkflowEvaluator().evaluate(
+        trace,
+        "password reset completed",
+        required_tools=["accounts.reset_password"],
+    )
+
+    assert result.success is False
+    assert result.error_penalty > 0.0
+    assert result.score < 0.7

@@ -43,7 +43,9 @@ class QualityGate:
         if summary.pass_rate < config.min_pass_rate:
             return GateResult(
                 passed=False,
-                reason=f"Pass rate {(summary.pass_rate*100):.1f}% is below threshold {(config.min_pass_rate*100):.1f}%",
+                reason=(
+                    f"Pass rate {(summary.pass_rate * 100):.1f}% is below threshold {(config.min_pass_rate * 100):.1f}%"
+                ),
                 metrics={"pass_rate": summary.pass_rate},
             )
 
@@ -81,14 +83,14 @@ class RegressionBlocker:
             return GateResult(
                 passed=False,
                 reason=(
-                    f"Regression detected! Pass rate dropped by {(abs(pass_rate_delta)*100):.1f}% "
-                    f"compared to baseline ({(baseline.pass_rate*100):.1f}%)"
+                    f"Regression detected! Pass rate dropped by {(abs(pass_rate_delta) * 100):.1f}% "
+                    f"compared to baseline ({(baseline.pass_rate * 100):.1f}%)"
                 ),
                 metrics={"delta": pass_rate_delta, "baseline": baseline.pass_rate},
             )
 
         return GateResult(
             passed=True,
-            reason=f"Performance stable. Drift: {(pass_rate_delta*100):+.1f}%",
+            reason=f"Performance stable. Drift: {(pass_rate_delta * 100):+.1f}%",
             metrics={"delta": pass_rate_delta},
         )

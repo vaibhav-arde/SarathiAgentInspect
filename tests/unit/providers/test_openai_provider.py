@@ -1,5 +1,6 @@
 """Unit tests for the OpenAI provider."""
 
+import sys
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -164,3 +165,10 @@ async def test_generate_stream(provider: Any) -> None:
             chunks.append(chunk)
 
     assert chunks == ["Hello", " world"]
+
+
+def test_get_token_count_falls_back_without_tiktoken(provider: Any, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Test token counting fallback when tiktoken is unavailable."""
+    monkeypatch.setitem(sys.modules, "tiktoken", None)
+
+    assert provider.get_token_count("one two three") == 3

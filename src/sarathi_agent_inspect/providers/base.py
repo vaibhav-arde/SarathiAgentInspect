@@ -16,7 +16,10 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
+from enum import Enum
 from typing import TYPE_CHECKING, Any
+
+from sarathi_agent_inspect.core.exceptions.base import ConfigurationError
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator
@@ -79,6 +82,30 @@ class ProviderResponse:
     timestamp: datetime = field(default_factory=lambda: datetime.now(UTC))
 
 
+class ProviderFeature(Enum):
+    """Discrete features that provider integrations may or may not support."""
+
+    GENERATE = "generate"
+    STREAM = "stream"
+    EMBEDDINGS = "embeddings"
+    TOKEN_COUNT = "token_count"  # noqa: S105
+    COST_ESTIMATION = "cost_estimation"
+
+
+@dataclass(frozen=True)
+class ProviderCapabilities:
+    """Declared support matrix for a provider implementation."""
+
+    ready: bool = True
+    supports_generation: bool = True
+    supports_streaming: bool = True
+    supports_embeddings: bool = True
+    supports_token_count: bool = True
+    supports_cost_estimation: bool = True
+    supports_tools: bool = False
+    notes: str = ""
+
+
 class BaseProvider(ABC):
     """Abstract base class for LLM providers.
 
@@ -94,6 +121,44 @@ class BaseProvider(ABC):
             **kwargs: Additional provider-specific overrides.
         """
         self._settings = settings
+
+    def get_capabilities(self) -> ProviderCapabilities:
+        """Return the provider feature matrix.
+
+        Subclasses can override this when implementation coverage is partial.
+        """
+        model_info = self.get_model_info()
+        return ProviderCapabilities(
+            ready=True,
+            supports_generation=True,
+            supports_streaming=model_info.supports_streaming,
+            supports_embeddings=True,
+            supports_token_count=True,
+            supports_cost_estimation=True,
+            supports_tools=model_info.supports_tools,
+        )
+
+    def supports_feature(self, feature: ProviderFeature) -> bool:
+        """Return True when the provider supports the requested feature."""
+        capabilities = self.get_capabilities()
+        feature_map = {
+            ProviderFeature.GENERATE: capabilities.supports_generation,
+            ProviderFeature.STREAM: capabilities.supports_streaming,
+            ProviderFeature.EMBEDDINGS: capabilities.supports_embeddings,
+            ProviderFeature.TOKEN_COUNT: capabilities.supports_token_count,
+            ProviderFeature.COST_ESTIMATION: capabilities.supports_cost_estimation,
+        }
+        return feature_map[feature]
+
+    def ensure_ready(self) -> None:
+        """Fail fast when a provider is registered but not usable."""
+        capabilities = self.get_capabilities()
+        if not capabilities.ready:
+            detail = f" {capabilities.notes}" if capabilities.notes else ""
+            raise ConfigurationError(
+                message=f"Provider '{self.provider_name}' is registered but not ready for use.{detail}",
+                context={"provider": self.provider_name, "model": self.model_name},
+            )
 
     @property
     @abstractmethod

@@ -12,7 +12,7 @@ Built with Python 3.13, DeepEval, Pydantic, and production-grade tooling.
 
 ## Features
 
-- 🔌 **Multi-Provider LLM Support** — Ollama, OpenAI, Anthropic, Gemini, Azure OpenAI
+- 🔌 **Multi-Provider LLM Support** — Ollama, OpenAI, Gemini, plus Anthropic/Azure configuration scaffolding
 - 📊 **50+ Evaluation Metrics** — Via DeepEval (Faithfulness, Hallucination, GEval, etc.)
 - 🤖 **Agent Evaluation** — Tool calling, planning, memory, multi-step reasoning
 - 📚 **RAG Evaluation** — Retriever, generator, context quality, citation validation

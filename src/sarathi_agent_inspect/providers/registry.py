@@ -112,4 +112,8 @@ class ProviderFactory:
         """
         name = provider_name or settings.provider.default
         provider_cls = ProviderRegistry.get(name)
-        return provider_cls(settings=settings, **kwargs)
+        allow_unavailable = bool(kwargs.pop("allow_unavailable", False))
+        provider = provider_cls(settings=settings, **kwargs)
+        if not allow_unavailable:
+            provider.ensure_ready()
+        return provider

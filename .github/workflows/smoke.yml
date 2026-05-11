@@ -16,13 +16,13 @@ jobs:
           enable-cache: true
       - run: uv python install 3.13
       - run: uv sync --all-extras
-      
+
       - name: Run Linting
         run: uv run ruff check .
-        
+
       - name: Run Type Checks
         run: uv run mypy .
-        
+
       - name: Run Smoke Evaluations
         run: uv run pytest tests/ -m smoke -v
         env:

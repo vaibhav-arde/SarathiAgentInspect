@@ -68,6 +68,22 @@ class AgentTrace(BaseTrace):
     def add_span(self, span: AgentSpan) -> None:
         self.spans.append(span)
 
+    def iter_steps(self) -> list[AgentStep]:
+        """Return all steps in execution order."""
+        return [step for span in self.spans for step in span.steps]
+
+    def final_step(self) -> AgentStep | None:
+        """Return the final recorded step, if any."""
+        steps = self.iter_steps()
+        return steps[-1] if steps else None
+
+    def final_content(self) -> str:
+        """Return the last non-empty step content."""
+        for step in reversed(self.iter_steps()):
+            if step.content.strip():
+                return step.content
+        return ""
+
     def complete(self) -> None:
         """Mark the trace as finished."""
         super().complete()

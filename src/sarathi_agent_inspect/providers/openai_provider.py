@@ -206,8 +206,15 @@ class OpenAIProvider(BaseProvider):
         return [item.embedding for item in response.data]
 
     def get_token_count(self, text: str) -> int:
-        """Calculate token count using tiktoken."""
-        import tiktoken  # type: ignore[import-not-found]
+        """Calculate token count using tiktoken when available.
+
+        Falls back to a coarse word-based estimate if the optional tokenizer
+        dependency is unavailable at runtime.
+        """
+        try:
+            import tiktoken  # type: ignore[import-not-found]
+        except ImportError:
+            return len(text.split())
 
         try:
             encoding = tiktoken.encoding_for_model(self._model)
