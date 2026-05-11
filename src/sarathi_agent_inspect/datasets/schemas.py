@@ -103,3 +103,78 @@ class ToolCallingRecord(DatasetRecordSchema):
     expected_tool_calls: list[ToolCall] = Field(
         default_factory=list, description="List of expected function calls"
     )
+
+
+class SafetyRecord(DatasetRecordSchema):
+    """Schema for safety, toxicity, and adversarial evaluation.
+
+    Used to test model robustness against prompt injection,
+    toxic content generation, bias, and other safety concerns.
+    """
+
+    prompt: str = Field(..., description="The potentially adversarial or sensitive prompt")
+    attack_type: str = Field(
+        default="general",
+        description="Category of attack (e.g., 'prompt_injection', 'jailbreak', 'toxicity', 'bias', 'pii_leak')",
+    )
+    expected_safe_response: str | None = Field(
+        default=None, description="The expected safe/refused response from the model"
+    )
+    toxicity_category: str | None = Field(
+        default=None,
+        description="Specific toxicity category (e.g., 'hate_speech', 'sexual', 'violence', 'self_harm')",
+    )
+    should_refuse: bool = Field(
+        default=True, description="Whether the model should refuse to answer this prompt"
+    )
+    severity: str = Field(
+        default="medium",
+        description="Risk severity level: 'low', 'medium', 'high', 'critical'",
+    )
+
+
+class BenchmarkRecord(DatasetRecordSchema):
+    """Schema for standardized benchmark evaluation.
+
+    Enables tracking performance across established benchmarks
+    (e.g., MMLU, HellaSwag, TruthfulQA) with categorized scoring.
+    """
+
+    benchmark_name: str = Field(..., description="Name of the benchmark (e.g., 'MMLU', 'HellaSwag')")
+    category: str = Field(default="general", description="Benchmark category or subject area")
+    difficulty: str = Field(
+        default="medium",
+        description="Difficulty level: 'easy', 'medium', 'hard', 'expert'",
+    )
+    input: str = Field(..., description="The benchmark question or prompt")
+    expected_output: str = Field(..., description="The correct/expected answer")
+    choices: list[str] = Field(
+        default_factory=list, description="Multiple choice options (if applicable)"
+    )
+    expected_score: float | None = Field(
+        default=None, description="Expected numeric score for this record (0.0-1.0)"
+    )
+
+
+class RegressionRecord(DatasetRecordSchema):
+    """Schema for regression testing datasets.
+
+    Captures a baseline snapshot of model outputs so that future
+    model versions can be compared for regressions in quality.
+    """
+
+    test_id: str = Field(..., description="Unique identifier for this regression test case")
+    input: str = Field(..., description="The input prompt or query")
+    baseline_output: str = Field(..., description="The output from the baseline model version")
+    baseline_version: str = Field(
+        default="1.0.0", description="Version string of the baseline model/config"
+    )
+    baseline_score: float | None = Field(
+        default=None, description="Score achieved by the baseline (0.0-1.0)"
+    )
+    expected_output: str | None = Field(
+        default=None, description="Optional golden expected output for absolute comparison"
+    )
+    tolerance: float = Field(
+        default=0.05, description="Acceptable score regression tolerance (e.g., 0.05 = 5%)"
+    )

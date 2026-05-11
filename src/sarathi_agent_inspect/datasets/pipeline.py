@@ -1,11 +1,18 @@
 """Dataset transformation and filtering pipeline.
 
 Provides a lazy-evaluation pipeline for mapping, filtering,
-and deduplicating dataset records.
+deduplicating, batching, and sampling dataset records.
+
+Scalability strategy:
+    - All operations are lazy (generator-based) until materialized
+    - batch() yields fixed-size chunks for memory-bounded processing
+    - sample() provides random subset selection for quick iterations
+    - Chaining operations builds a pipeline graph, not a data copy
 """
 
 from __future__ import annotations
 
+import random
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
@@ -116,3 +123,79 @@ class DatasetPipeline:
     def to_list(self) -> list[DatasetRecord]:
         """Execute pipeline and materialize as a list."""
         return list(self)
+
+    def batch(self, batch_size: int = 100) -> Iterator[list[DatasetRecord]]:
+        """Yield records in fixed-size batches for memory-bounded processing.
+
+        This is critical for large datasets where materializing the entire
+        dataset into memory is impractical. Each batch is a list that can
+        be processed independently.
+
+        Args:
+            batch_size: Number of records per batch. Must be > 0.
+
+        Yields:
+            Lists of records, each containing at most batch_size items.
+            The final batch may contain fewer items.
+
+        Raises:
+            ValueError: If batch_size is not positive.
+        """
+        if batch_size <= 0:
+            raise ValueError(f"batch_size must be positive, got {batch_size}")
+
+        current_batch: list[DatasetRecord] = []
+        for record in self:
+            current_batch.append(record)
+            if len(current_batch) >= batch_size:
+                yield current_batch
+                current_batch = []
+
+        # Yield the remaining partial batch
+        if current_batch:
+            yield current_batch
+
+    def sample(self, n: int, *, seed: int | None = None) -> list[DatasetRecord]:
+        """Select a random subset of records from the pipeline.
+
+        Useful for quick iteration during development, smoke tests,
+        or when evaluating a representative subset of a large dataset.
+
+        Note: This materializes the pipeline first (requires full pass).
+        For very large datasets, consider using filter() with a probability
+        check instead.
+
+        Args:
+            n: Number of records to sample.
+            seed: Optional random seed for reproducibility.
+
+        Returns:
+            List of n randomly selected records (or all records if n > total).
+        """
+        all_records = self.to_list()
+
+        rng = random.Random(seed) if seed is not None else random.Random()  # noqa: S311
+
+        if n >= len(all_records):
+            return all_records
+
+        return rng.sample(all_records, n)
+
+    def head(self, n: int = 10) -> list[DatasetRecord]:
+        """Return the first n records from the pipeline.
+
+        Useful for quick inspection without materializing the full dataset.
+
+        Args:
+            n: Number of records to return.
+
+        Returns:
+            List of up to n records from the beginning of the pipeline.
+        """
+        results: list[DatasetRecord] = []
+        for record in self:
+            results.append(record)
+            if len(results) >= n:
+                break
+        return results
+
