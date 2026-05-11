@@ -224,6 +224,9 @@ __marimo__/
 .env.local
 .env.*.local
 reports/
+.sarathi/
+allure-results/
+allure-report/
 .cache/
 logs/
 datasets/*.cache

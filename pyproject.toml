@@ -29,6 +29,9 @@ dependencies = [
     "polars>=1.5.0",
     "pyarrow>=17.0.0",
     "dvc>=3.55.0",
+    "jinja2>=3.1.6",
+    "allure-pytest>=2.16.0",
+    "slack-sdk>=3.41.0",
 ]
 
 [project.optional-dependencies]
