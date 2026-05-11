@@ -22,9 +22,7 @@ class ToolEvaluator:
     def __init__(self, provider: BaseProvider | None = None) -> None:
         self.provider = provider
 
-    def validate_schema(
-        self, arguments: str | dict[str, Any], schema: type[BaseModel] | dict[str, Any]
-    ) -> bool:
+    def validate_schema(self, arguments: str | dict[str, Any], schema: type[BaseModel] | dict[str, Any]) -> bool:
         """Strict schema validation for tool arguments.
 
         Supports both Pydantic models (recommended for enterprise) or simple dict schemas.
@@ -44,12 +42,7 @@ class ToolEvaluator:
         except (json.JSONDecodeError, TypeError, ValidationError):
             return False
 
-    async def evaluate_semantic_correctness(
-        self,
-        tool_name: str,
-        arguments: str,
-        context: str
-    ) -> float:
+    async def evaluate_semantic_correctness(self, tool_name: str, arguments: str, context: str) -> float:
         """Semantic evaluation of tool calls via LLM judge.
 
         Checks if the chosen tool and arguments make sense given the agent's current task.

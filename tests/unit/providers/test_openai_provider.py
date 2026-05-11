@@ -87,9 +87,11 @@ async def test_generate_auth_error(provider):
         side_effect=openai.AuthenticationError("Auth failed", response=mock_response, body=None)
     )
 
-    with patch("sarathi_agent_inspect.providers.openai_provider.AsyncOpenAI", return_value=mock_client):
-        with pytest.raises(ProviderAuthenticationError):
-            await provider.generate("Hi")
+    with (
+        patch("sarathi_agent_inspect.providers.openai_provider.AsyncOpenAI", return_value=mock_client),
+        pytest.raises(ProviderAuthenticationError),
+    ):
+        await provider.generate("Hi")
 
 
 @pytest.mark.asyncio
@@ -103,9 +105,11 @@ async def test_generate_rate_limit_error(provider):
         side_effect=openai.RateLimitError("Rate limit", response=mock_response, body=None)
     )
 
-    with patch("sarathi_agent_inspect.providers.openai_provider.AsyncOpenAI", return_value=mock_client):
-        with pytest.raises(ProviderRateLimitError):
-            await provider.generate("Hi")
+    with (
+        patch("sarathi_agent_inspect.providers.openai_provider.AsyncOpenAI", return_value=mock_client),
+        pytest.raises(ProviderRateLimitError),
+    ):
+        await provider.generate("Hi")
 
 
 @pytest.mark.asyncio
@@ -114,13 +118,13 @@ async def test_generate_timeout_error(provider):
     mock_client = AsyncMock()
     mock_request = httpx.Request("POST", "https://api.openai.com/v1/chat/completions")
 
-    mock_client.chat.completions.create = AsyncMock(
-        side_effect=openai.APITimeoutError(request=mock_request)
-    )
+    mock_client.chat.completions.create = AsyncMock(side_effect=openai.APITimeoutError(request=mock_request))
 
-    with patch("sarathi_agent_inspect.providers.openai_provider.AsyncOpenAI", return_value=mock_client):
-        with pytest.raises(ProviderTimeoutError):
-            await provider.generate("Hi")
+    with (
+        patch("sarathi_agent_inspect.providers.openai_provider.AsyncOpenAI", return_value=mock_client),
+        pytest.raises(ProviderTimeoutError),
+    ):
+        await provider.generate("Hi")
 
 
 @pytest.mark.asyncio
@@ -151,9 +155,7 @@ async def test_generate_stream(provider):
     mock_chunk2.choices[0].delta.content = " world"
 
     mock_client = AsyncMock()
-    mock_client.chat.completions.create = AsyncMock(
-        return_value=AsyncIteratorMock([mock_chunk1, mock_chunk2])
-    )
+    mock_client.chat.completions.create = AsyncMock(return_value=AsyncIteratorMock([mock_chunk1, mock_chunk2]))
 
     with patch("sarathi_agent_inspect.providers.openai_provider.AsyncOpenAI", return_value=mock_client):
         chunks = []

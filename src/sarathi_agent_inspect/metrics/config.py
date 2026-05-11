@@ -4,6 +4,7 @@ Provides the configuration architecture for metrics, enforcing
 thresholds, strict vs. soft pass/fail strategies, and
 scoring boundaries for the framework.
 """
+
 from __future__ import annotations
 
 from typing import Any, Literal

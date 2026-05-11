@@ -6,7 +6,7 @@ Communicates with Google's generative models using the unified google-genai SDK.
 from __future__ import annotations
 
 import time
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from google import genai
 from google.genai.errors import APIError
@@ -133,6 +133,7 @@ class GeminiProvider(BaseProvider):
 
         # Cast to appease Mypy since kwargs can be anything
         from typing import cast
+
         return cast("GenerateContentConfigDict", config_dict)
 
     async def generate(
@@ -194,32 +195,39 @@ class GeminiProvider(BaseProvider):
         if not self._client:
             await self.initialize()
 
+        assert self._client is not None
         # The SDK supports list[str] natively
         response = await self._client.aio.models.embed_content(
             model="text-embedding-004",  # Default embedding model for Gemini
             contents=text,
         )
-        
+
+        if response.embeddings is None:
+            return cast(
+                "list[float] | list[list[float]]",
+                [] if isinstance(text, str) else [[] for _ in text],
+            )
+
         if isinstance(text, str):
-            return response.embeddings[0].values
-        return [e.values for e in response.embeddings]
+            return response.embeddings[0].values or []
+        return [e.values or [] for e in response.embeddings]
 
     def get_token_count(self, text: str) -> int:
         """Calculate token count using Gemini's native API."""
         if not self._client:
             # Fallback to word count if client not initialized
             return len(text.split())
-        
+
         # This is a sync call in the SDK
         response = self._client.models.count_tokens(
             model=self._model,
             contents=text,
         )
-        return response.total_tokens
+        return response.total_tokens or 0
 
     def get_cost(self, prompt_tokens: int, completion_tokens: int) -> float:
         """Return cost using central estimator."""
-        return estimate_cost(self._model, prompt_tokens, completion_tokens, self.provider_name)
+        return estimate_cost(self._model, prompt_tokens, completion_tokens, self.provider_name) or 0.0
 
     async def generate_stream(
         self,

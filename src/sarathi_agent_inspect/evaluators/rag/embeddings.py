@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class EmbeddingVersionTracker:
     """Tracks versions of embedding models to prevent silent regressions."""
+
     model_name: str
     version: str
     dimension: int
@@ -41,6 +42,7 @@ class EmbeddingVersionTracker:
 
 class EmbeddingModel(Protocol):
     """Abstract interface for pluggable embedding models."""
+
     def embed_text(self, text: str) -> list[float]:
         """Convert a single string into a vector embedding."""
         ...

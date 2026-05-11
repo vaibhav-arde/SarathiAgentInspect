@@ -15,6 +15,7 @@ from sarathi_agent_inspect.core.observability import BaseTrace
 @dataclass
 class RetrievalNode:
     """Represents a single step in a multi-hop retrieval."""
+
     query: str
     documents_retrieved: int
     latency_ms: float
@@ -25,6 +26,7 @@ class RetrievalNode:
 @dataclass
 class RAGTrace(BaseTrace):
     """Tracks a complete RAG execution trace."""
+
     retrieval_nodes: list[RetrievalNode] = field(default_factory=list)
     generation_latency_ms: float = 0.0
     generation_cost_usd: float = 0.0

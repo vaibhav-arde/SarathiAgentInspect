@@ -19,6 +19,7 @@ def test_pipeline_filter():
     assert len(results) == 1
     assert results[0]["input"] == "b"
 
+
 def test_pipeline_map():
     """Test pipeline mapping."""
     data = [{"input": "hello"}]
@@ -27,6 +28,7 @@ def test_pipeline_map():
     results = pipeline.to_list()
 
     assert results[0]["input"] == "HELLO"
+
 
 def test_pipeline_deduplicate():
     """Test pipeline deduplication."""
@@ -42,6 +44,7 @@ def test_pipeline_deduplicate():
     assert len(results) == 2
     assert results[0]["input"] == "dup"
     assert results[1]["input"] == "unique"
+
 
 def test_pipeline_tagging():
     """Test pipeline tagging."""
@@ -117,11 +120,7 @@ def test_pipeline_batch_with_filter():
     """Test batching after filtering (pipeline chaining)."""
     data = [{"id": i, "keep": i % 2 == 0} for i in range(10)]
 
-    batches = list(
-        DatasetPipeline(data)
-        .filter(lambda r: r["keep"])
-        .batch(batch_size=2)
-    )
+    batches = list(DatasetPipeline(data).filter(lambda r: r["keep"]).batch(batch_size=2))
     assert len(batches) == 3  # 5 even numbers / 2 = 2 full + 1 partial
     assert len(batches[0]) == 2
     assert len(batches[2]) == 1
@@ -191,4 +190,3 @@ def test_pipeline_head_default():
 
     result = DatasetPipeline(data).head()
     assert len(result) == 10
-

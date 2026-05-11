@@ -102,9 +102,7 @@ class SyntheticGenerator:
         """
         self.provider = provider
 
-    async def generate_edge_cases(
-        self, base_record: DatasetRecord, count: int = 3
-    ) -> list[DatasetRecord]:
+    async def generate_edge_cases(self, base_record: DatasetRecord, count: int = 3) -> list[DatasetRecord]:
         """Generate synthetic edge-cases based on a golden record.
 
         Args:

@@ -29,14 +29,9 @@ def test_generate_from_templates_specific_category():
 
 def test_generate_from_templates_multiple_categories():
     """Test generating from multiple specific categories."""
-    records = SyntheticGenerator.generate_from_templates(
-        categories=["empty_input", "numeric"]
-    )
+    records = SyntheticGenerator.generate_from_templates(categories=["empty_input", "numeric"])
 
-    expected_count = (
-        len(EDGE_CASE_TEMPLATES["empty_input"]) +
-        len(EDGE_CASE_TEMPLATES["numeric"])
-    )
+    expected_count = len(EDGE_CASE_TEMPLATES["empty_input"]) + len(EDGE_CASE_TEMPLATES["numeric"])
     assert len(records) == expected_count
 
 
@@ -67,8 +62,13 @@ def test_generate_from_templates_empty_category():
 def test_edge_case_templates_structure():
     """Test that all template categories exist and have valid records."""
     expected_categories = [
-        "empty_input", "unicode", "injection", "max_length",
-        "special_characters", "numeric", "adversarial",
+        "empty_input",
+        "unicode",
+        "injection",
+        "max_length",
+        "special_characters",
+        "numeric",
+        "adversarial",
     ]
 
     for category in expected_categories:

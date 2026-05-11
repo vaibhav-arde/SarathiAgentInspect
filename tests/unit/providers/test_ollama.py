@@ -88,24 +88,29 @@ async def test_generate_success(provider):
 @pytest.mark.asyncio
 async def test_generate_timeout_error(provider):
     """Test generation timeout error mapping."""
-    with patch("httpx.AsyncClient.post", side_effect=httpx.TimeoutException("Timeout")):
-        with pytest.raises(ProviderTimeoutError) as exc_info:
-            await provider.generate("Hi")
+    with (
+        patch("httpx.AsyncClient.post", side_effect=httpx.TimeoutException("Timeout")),
+        pytest.raises(ProviderTimeoutError) as exc_info,
+    ):
+        await provider.generate("Hi")
     assert "timed out" in str(exc_info.value)
 
 
 @pytest.mark.asyncio
 async def test_generate_connection_error(provider):
     """Test generation connection error mapping."""
-    with patch("httpx.AsyncClient.post", side_effect=httpx.ConnectError("Connection refused")):
-        with pytest.raises(ProviderConnectionError) as exc_info:
-            await provider.generate("Hi")
+    with (
+        patch("httpx.AsyncClient.post", side_effect=httpx.ConnectError("Connection refused")),
+        pytest.raises(ProviderConnectionError) as exc_info,
+    ):
+        await provider.generate("Hi")
     assert "Failed to connect" in str(exc_info.value)
 
 
 @pytest.mark.asyncio
 async def test_generate_stream(provider):
     """Test streaming generation."""
+
     class MockStreamContext:
         async def __aenter__(self):
             return self

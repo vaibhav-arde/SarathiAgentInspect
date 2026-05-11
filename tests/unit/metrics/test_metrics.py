@@ -10,18 +10,20 @@ from sarathi_agent_inspect.metrics.config import MetricConfig
 from sarathi_agent_inspect.metrics.execution import MetricExecutor
 from sarathi_agent_inspect.metrics.observability import MetricObserver
 from sarathi_agent_inspect.metrics.registry import MetricRegistry
+from typing import Any
 from sarathi_agent_inspect.metrics.sdk import SimpleAsyncMetric, metric
 
 # --- Test Configuration ---
 
-def test_metric_config_strict():
+
+def test_metric_config_strict() -> None:
     """Test strict pass/fail."""
     config = MetricConfig(threshold=0.8, strict_mode=True, tolerance=0.1)
     assert config.is_passing(0.8) is True
     assert config.is_passing(0.79) is False
 
 
-def test_metric_config_soft():
+def test_metric_config_soft() -> None:
     """Test soft pass/fail with tolerance."""
     config = MetricConfig(threshold=0.8, strict_mode=False, tolerance=0.1)
     assert config.is_passing(0.8) is True
@@ -31,17 +33,22 @@ def test_metric_config_soft():
 
 # --- Test Registry ---
 
-def test_registry_registration_and_retrieval():
+
+def test_registry_registration_and_retrieval() -> None:
     """Test registering and fetching a metric."""
     MetricRegistry.clear()
 
     @metric("test_metric_abc")
     class DummyMetric(BaseMetric):
         @property
-        def metric_name(self): return "test_metric_abc"
+        def metric_name(self) -> str:
+            return "test_metric_abc"
+
         @property
-        def description(self): return "Dummy"
-        async def compute(self, **kwargs):
+        def description(self) -> str:
+            return "Dummy"
+
+        async def compute(self, **kwargs: Any) -> MetricResult:
             return MetricResult(self.metric_name, 1.0, True, 0.5)
 
     assert "test_metric_abc" in MetricRegistry.list_metrics()
@@ -53,7 +60,7 @@ def test_registry_registration_and_retrieval():
     assert isinstance(instance, DummyMetric)
 
 
-def test_registry_missing():
+def test_registry_missing() -> None:
     """Test retrieving non-existent metric."""
     MetricRegistry.clear()
     with pytest.raises(KeyError):
@@ -62,10 +69,12 @@ def test_registry_missing():
 
 # --- Test SDK / Simple Metric ---
 
+
 @pytest.mark.asyncio
-async def test_simple_async_metric():
+async def test_simple_async_metric() -> None:
     """Test SDK SimpleAsyncMetric creation."""
-    async def my_eval(input_text, actual_output, **kwargs):
+
+    async def my_eval(input_text: str, actual_output: str, **kwargs: Any) -> float:
         return 0.9
 
     sm = SimpleAsyncMetric("my_simple", my_eval)
@@ -77,11 +86,16 @@ async def test_simple_async_metric():
 
 # --- Test Composite Metric ---
 
+
 @pytest.mark.asyncio
-async def test_composite_metric_mean():
+async def test_composite_metric_mean() -> None:
     """Test composite metric aggregation (mean)."""
-    async def eval1(**kwargs): return 1.0
-    async def eval2(**kwargs): return 0.5
+
+    async def eval1(**kwargs: Any) -> float:
+        return 1.0
+
+    async def eval2(**kwargs: Any) -> float:
+        return 0.5
 
     m1 = SimpleAsyncMetric("m1", eval1)
     m2 = SimpleAsyncMetric("m2", eval2)
@@ -94,10 +108,14 @@ async def test_composite_metric_mean():
 
 
 @pytest.mark.asyncio
-async def test_composite_metric_weighted():
+async def test_composite_metric_weighted() -> None:
     """Test composite metric aggregation (weighted)."""
-    async def eval1(**kwargs): return 1.0
-    async def eval2(**kwargs): return 0.0
+
+    async def eval1(**kwargs: Any) -> float:
+        return 1.0
+
+    async def eval2(**kwargs: Any) -> float:
+        return 0.0
 
     m1 = SimpleAsyncMetric("m1", eval1)
     m2 = SimpleAsyncMetric("m2", eval2)
@@ -111,20 +129,24 @@ async def test_composite_metric_weighted():
 
 # --- Test Execution ---
 
+
 @pytest.mark.asyncio
-async def test_metric_executor_retry():
+async def test_metric_executor_retry() -> None:
     """Test the executor retries failures."""
 
     class FlakyMetric(BaseMetric):
-        def __init__(self):
+        def __init__(self) -> None:
             self.calls = 0
 
         @property
-        def metric_name(self): return "flaky"
-        @property
-        def description(self): return ""
+        def metric_name(self) -> str:
+            return "flaky"
 
-        async def compute(self, **kwargs):
+        @property
+        def description(self) -> str:
+            return ""
+
+        async def compute(self, **kwargs: Any) -> MetricResult:
             self.calls += 1
             if self.calls < 3:
                 raise ValueError("Random failure")
@@ -134,36 +156,37 @@ async def test_metric_executor_retry():
     config = MetricConfig(threshold=0.5)
     executor = MetricExecutor(max_retries=3, retry_delay=0.01)
 
-    result = await executor.execute_metric(
-        metric_obj, config, input_text="in", actual_output="out"
-    )
+    result = await executor.execute_metric(metric_obj, config, input_text="in", actual_output="out")
 
     assert result.score == 0.9
     assert metric_obj.calls == 3
 
 
 @pytest.mark.asyncio
-async def test_metric_executor_normalization():
+async def test_metric_executor_normalization() -> None:
     """Test the executor normalizes scores."""
 
     class RawMetric(BaseMetric):
         @property
-        def metric_name(self): return "raw"
-        @property
-        def description(self): return ""
-        @property
-        def score_range(self): return (0.0, 10.0)
+        def metric_name(self) -> str:
+            return "raw"
 
-        async def compute(self, **kwargs):
+        @property
+        def description(self) -> str:
+            return ""
+
+        @property
+        def score_range(self) -> tuple[float, float]:
+            return (0.0, 10.0)
+
+        async def compute(self, **kwargs: Any) -> MetricResult:
             return MetricResult(self.metric_name, 8.0, True, 5.0)
 
     metric_obj = RawMetric()
     config = MetricConfig(normalization_strategy="min_max")
     executor = MetricExecutor()
 
-    result = await executor.execute_metric(
-        metric_obj, config, input_text="in", actual_output="out"
-    )
+    result = await executor.execute_metric(metric_obj, config, input_text="in", actual_output="out")
 
     # 8.0 on a 0-10 scale should normalize to 0.8
     assert result.score == 0.8
@@ -171,7 +194,8 @@ async def test_metric_executor_normalization():
 
 # --- Test Observability ---
 
-def test_metric_observer(tmp_path):
+
+def test_metric_observer(tmp_path: Any) -> None:
     """Test metric tracing and persistence."""
     obs = MetricObserver(storage_dir=tmp_path)
 
@@ -189,6 +213,7 @@ def test_metric_observer(tmp_path):
     assert Path(file_path).exists()
 
     import json
+
     with open(file_path) as f:
         data = json.load(f)
 

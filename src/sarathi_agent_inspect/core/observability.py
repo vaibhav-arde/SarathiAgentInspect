@@ -16,6 +16,7 @@ from typing import Any
 @dataclass
 class BaseTrace:
     """Common logic for RAG and Agent traces."""
+
     trace_id: str
     input_text: str
     metadata: dict[str, Any] = field(default_factory=dict)
@@ -37,7 +38,7 @@ class BaseTrace:
 
 class EvaluationSession:
     """Tracks a complete batch evaluation session.
-    
+
     Collects results, costs, and environmental metadata for a full run
     and exports a manifest for CI/CD integration.
     """
@@ -50,7 +51,7 @@ class EvaluationSession:
         self.total_cost_usd: float = 0.0
         self.metadata: dict[str, Any] = {
             "environment": environment,
-            "git_commit": "unknown", # Can be injected
+            "git_commit": "unknown",  # Can be injected
             "user": "vaibhav-arde",
         }
 
@@ -73,7 +74,7 @@ class EvaluationSession:
             },
             "results": self.results,
         }
-        
+
         path.parent.mkdir(parents=True, exist_ok=True)
         with open(path, "w") as f:
             json.dump(manifest, f, indent=2)

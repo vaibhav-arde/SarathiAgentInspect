@@ -31,6 +31,7 @@ class ParquetLoader(BaseDataset):
         # Deferred import to keep base footprint low if polars isn't installed
         try:
             import polars as pl
+
             self.pl = pl
         except ImportError as e:
             raise ImportError("polars is required for ParquetLoader. Run `pip install polars pyarrow`") from e

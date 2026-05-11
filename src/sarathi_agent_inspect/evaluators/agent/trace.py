@@ -6,7 +6,6 @@ Includes step-level and span-level evaluation.
 
 from __future__ import annotations
 
-import time
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from enum import Enum
@@ -26,6 +25,7 @@ class StepType(Enum):
 @dataclass
 class AgentStep:
     """A single atomic unit of agent execution."""
+
     step_id: str
     type: StepType
     content: str
@@ -38,6 +38,7 @@ class AgentStep:
 @dataclass
 class AgentSpan:
     """A group of related steps representing a sub-task."""
+
     span_id: str
     name: str
     steps: list[AgentStep] = field(default_factory=list)
@@ -61,6 +62,7 @@ class AgentSpan:
 @dataclass
 class AgentTrace(BaseTrace):
     """Full execution history of an agent's task."""
+
     spans: list[AgentSpan] = field(default_factory=list)
 
     def add_span(self, span: AgentSpan) -> None:
@@ -69,9 +71,7 @@ class AgentTrace(BaseTrace):
     def complete(self) -> None:
         """Mark the trace as finished."""
         super().complete()
-        self.total_cost_usd = sum(
-            sum(step.cost_usd for step in span.steps) for span in self.spans
-        )
+        self.total_cost_usd = sum(sum(step.cost_usd for step in span.steps) for span in self.spans)
 
 
 class TraceScorer:

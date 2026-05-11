@@ -1,6 +1,6 @@
 """Global Concurrency and Rate Limiting.
 
-Provides a centralized mechanism to throttle LLM calls and other 
+Provides a centralized mechanism to throttle LLM calls and other
 external resource interactions across the entire framework.
 """
 
@@ -8,19 +8,21 @@ from __future__ import annotations
 
 import asyncio
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+from typing import Any
 
 
 @dataclass
 class RateLimitConfig:
     """Configuration for the rate limiter."""
+
     requests_per_minute: int = 60
     burst: int = 10
 
 
 class GlobalRateLimiter:
     """Centralized rate limiter using a token bucket algorithm.
-    
+
     Ensures that multiple parallel evaluations respect a global throughput limit.
     """
 
@@ -35,7 +37,7 @@ class GlobalRateLimiter:
     def __init__(self, config: RateLimitConfig | None = None) -> None:
         if getattr(self, "_initialized", False):
             return
-            
+
         self.config = config or RateLimitConfig()
         self.tokens = float(self.config.burst)
         self.last_update = time.monotonic()
@@ -51,7 +53,7 @@ class GlobalRateLimiter:
                     # Calculate wait time
                     wait_time = (1 - self.tokens) / (self.config.requests_per_minute / 60.0)
                     await asyncio.sleep(wait_time)
-            
+
             self._refill()
             self.tokens -= 1
 
@@ -66,7 +68,7 @@ class GlobalRateLimiter:
 
 class ConcurrencyManager:
     """Manages global semaphore and rate limits."""
-    
+
     def __init__(self, max_concurrent: int = 10, rpm: int = 60) -> None:
         self.semaphore = asyncio.Semaphore(max_concurrent)
         self.rate_limiter = GlobalRateLimiter(RateLimitConfig(requests_per_minute=rpm))
@@ -78,7 +80,7 @@ class ConcurrencyManager:
 
 class Throttler:
     """Combined context manager for semaphore and rate limiter."""
-    
+
     def __init__(self, semaphore: asyncio.Semaphore, limiter: GlobalRateLimiter) -> None:
         self.semaphore = semaphore
         self.limiter = limiter

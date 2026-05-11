@@ -17,6 +17,7 @@ except ImportError:
     class DeepEvalBaseLLM:
         pass
 
+
 if TYPE_CHECKING:
     from sarathi_agent_inspect.providers.base import BaseProvider
 
@@ -52,6 +53,7 @@ class ProviderAdapter(DeepEvalBaseLLM):
             # If we are already in an event loop, we need a nested execution or similar.
             # DeepEval sometimes mixes async/sync. We try to handle it gracefully.
             import nest_asyncio
+
             nest_asyncio.apply()
 
         return loop.run_until_complete(self.a_generate(prompt, **kwargs))

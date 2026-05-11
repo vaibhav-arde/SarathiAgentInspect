@@ -1,6 +1,5 @@
 """Unit tests for the AI Agent Evaluation System."""
 
-
 from sarathi_agent_inspect.evaluators.agent import (
     AgentSpan,
     AgentStep,
@@ -16,7 +15,7 @@ from sarathi_agent_inspect.evaluators.agent import (
 )
 
 
-def test_agent_trace_efficiency():
+def test_agent_trace_efficiency() -> None:
     """Test the efficiency scoring of an agent trace."""
     trace = AgentTrace(trace_id="t1", input_text="Find a flight")
     span = AgentSpan(span_id="s1", name="search")
@@ -35,7 +34,7 @@ def test_agent_trace_efficiency():
     assert scorer.calculate_efficiency(trace) == 0.5
 
 
-def test_tool_evaluator_schema():
+def test_tool_evaluator_schema() -> None:
     """Test strict schema validation for tool calls (Dict and Pydantic)."""
     evaluator = ToolEvaluator()
 
@@ -46,6 +45,7 @@ def test_tool_evaluator_schema():
 
     # Test Pydantic Schema
     from pydantic import BaseModel
+
     class SearchSchema(BaseModel):
         location: str
         date: str
@@ -54,7 +54,7 @@ def test_tool_evaluator_schema():
     assert evaluator.validate_schema('{"location": "SF"}', SearchSchema) is False
 
 
-def test_loop_detection():
+def test_loop_detection() -> None:
     """Test detection of repeating action sequences."""
     detector = LoopDetector()
 
@@ -65,7 +65,7 @@ def test_loop_detection():
     assert detector.detect_action_loops(actions, window_size=2) is False
 
 
-def test_infinite_loop_protector():
+def test_infinite_loop_protector() -> None:
     """Test active monitoring for infinite loops."""
     protector = InfiniteLoopProtector(max_steps=5, max_repeats=3)
 
@@ -77,7 +77,7 @@ def test_infinite_loop_protector():
     assert protector.should_terminate("search") is True
 
 
-def test_memory_retention():
+def test_memory_retention() -> None:
     """Test if agent remembers facts from earlier steps."""
     trace = AgentTrace(trace_id="t1", input_text="Test memory")
     span = AgentSpan(span_id="s1", name="mem")
@@ -96,7 +96,7 @@ def test_memory_retention():
     assert evaluator.check_fact_usage("unknown") is False
 
 
-def test_replay_engine_mock_generation():
+def test_replay_engine_mock_generation() -> None:
     """Test extraction of mock responses from a trace."""
     trace = AgentTrace(trace_id="t1", input_text="Replay test")
     span = AgentSpan(span_id="s1", name="replay")
@@ -110,7 +110,7 @@ def test_replay_engine_mock_generation():
     assert mocks["get_weather(city='London')"] == "Sunny, 20C"
 
 
-def test_reasoning_redundancy():
+def test_reasoning_redundancy() -> None:
     """Test redundancy detection in reasoning chains."""
     thoughts = ["I need to search", "I will search now", "I need to search"]
     score = ReasoningEvaluator.detect_redundancy(thoughts)

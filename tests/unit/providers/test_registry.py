@@ -100,6 +100,7 @@ def test_factory_create(mock_settings):
 
 def test_factory_override(mock_settings):
     """Test factory with provider name override."""
+
     @register_provider("mock2")
     class MockProvider2(MockProvider):
         @property

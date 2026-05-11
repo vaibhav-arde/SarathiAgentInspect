@@ -246,4 +246,3 @@ class BaseProvider(ABC):
     async def __aexit__(self, *_: Any) -> None:
         """Async context manager exit."""
         await self.shutdown()
-

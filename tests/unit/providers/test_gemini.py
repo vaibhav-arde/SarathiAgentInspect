@@ -84,13 +84,13 @@ async def test_generate_auth_error(provider):
     error = APIError("Auth failed", "{}")
     error.code = 401
 
-    mock_client.aio.models.generate_content = AsyncMock(
-        side_effect=error
-    )
+    mock_client.aio.models.generate_content = AsyncMock(side_effect=error)
 
-    with patch("sarathi_agent_inspect.providers.gemini.genai.Client", return_value=mock_client):
-        with pytest.raises(ProviderAuthenticationError):
-            await provider.generate("Hi")
+    with (
+        patch("sarathi_agent_inspect.providers.gemini.genai.Client", return_value=mock_client),
+        pytest.raises(ProviderAuthenticationError),
+    ):
+        await provider.generate("Hi")
 
 
 @pytest.mark.asyncio
@@ -101,13 +101,13 @@ async def test_generate_rate_limit_error(provider):
     error = APIError("Rate limit", "{}")
     error.code = 429
 
-    mock_client.aio.models.generate_content = AsyncMock(
-        side_effect=error
-    )
+    mock_client.aio.models.generate_content = AsyncMock(side_effect=error)
 
-    with patch("sarathi_agent_inspect.providers.gemini.genai.Client", return_value=mock_client):
-        with pytest.raises(ProviderRateLimitError):
-            await provider.generate("Hi")
+    with (
+        patch("sarathi_agent_inspect.providers.gemini.genai.Client", return_value=mock_client),
+        pytest.raises(ProviderRateLimitError),
+    ):
+        await provider.generate("Hi")
 
 
 @pytest.mark.asyncio
@@ -118,13 +118,13 @@ async def test_generate_connection_error(provider):
     error = APIError("Model not found", "{}")
     error.code = 404
 
-    mock_client.aio.models.generate_content = AsyncMock(
-        side_effect=error
-    )
+    mock_client.aio.models.generate_content = AsyncMock(side_effect=error)
 
-    with patch("sarathi_agent_inspect.providers.gemini.genai.Client", return_value=mock_client):
-        with pytest.raises(ProviderConnectionError):
-            await provider.generate("Hi")
+    with (
+        patch("sarathi_agent_inspect.providers.gemini.genai.Client", return_value=mock_client),
+        pytest.raises(ProviderConnectionError),
+    ):
+        await provider.generate("Hi")
 
 
 @pytest.mark.asyncio

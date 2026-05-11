@@ -49,6 +49,7 @@ class TraceLoader(BaseDataset):
         p = Path(path)
         if p.exists() and p.suffix.lower() == ".json":
             import json
+
             try:
                 with open(p, encoding="utf-8") as f:
                     self._records = json.load(f)

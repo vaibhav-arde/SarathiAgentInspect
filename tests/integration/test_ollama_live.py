@@ -36,10 +36,7 @@ async def test_ollama_live_generate(live_settings):
     """Test generating a simple completion from live Ollama."""
     provider = OllamaProvider(settings=live_settings)
 
-    response = await provider.generate(
-        "Say 'Hello integration test' and nothing else.",
-        temperature=0.0
-    )
+    response = await provider.generate("Say 'Hello integration test' and nothing else.", temperature=0.0)
 
     assert response.provider == "ollama"
     assert response.model == live_settings.provider.ollama.model
@@ -55,10 +52,7 @@ async def test_ollama_live_stream(live_settings):
     provider = OllamaProvider(settings=live_settings)
 
     chunks = []
-    async for chunk in provider.generate_stream(
-        "Count from 1 to 3.",
-        temperature=0.0
-    ):
+    async for chunk in provider.generate_stream("Count from 1 to 3.", temperature=0.0):
         chunks.append(chunk)
 
     full_response = "".join(chunks)
