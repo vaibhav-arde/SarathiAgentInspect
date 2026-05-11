@@ -19,6 +19,7 @@ from sarathi_agent_inspect.datasets.schemas import (
 )
 
 
+@pytest.mark.smoke
 def test_chatbot_record_valid() -> None:
     """Test valid chatbot record."""
     record = ChatbotRecord(input="Hello", expected_output="Hi")

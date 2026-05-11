@@ -1,0 +1,32 @@
+name: Smoke Tests
+
+on:
+  push:
+    branches: ["main", "phase-*"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+      - run: uv python install 3.13
+      - run: uv sync --all-extras
+      
+      - name: Run Linting
+        run: uv run ruff check .
+        
+      - name: Run Type Checks
+        run: uv run mypy .
+        
+      - name: Run Smoke Evaluations
+        run: uv run pytest tests/ -m smoke -v
+        env:
+          SARATHI_ENV: ci
+          OLLAMA_BASE_URL: ${{ secrets.OLLAMA_BASE_URL }}
+          OLLAMA_MODEL: ${{ vars.OLLAMA_MODEL || 'gemma4:31b-cloud' }}
+          SARATHI_JUDGE_MODEL: ${{ vars.JUDGE_MODEL || 'gemma4:31b-cloud' }}

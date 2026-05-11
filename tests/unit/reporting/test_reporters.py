@@ -46,6 +46,7 @@ def test_json_reporter(tmp_path: Path, sample_results: list[dict[str, Any]], sam
         assert len(data["results"]) == 2
 
 
+@pytest.mark.smoke
 def test_html_reporter(tmp_path: Path, sample_results: list[dict[str, Any]], sample_summary: EvaluationSummary) -> None:
     output_path = tmp_path / "report.html"
     reporter = HTMLReporter(output_path)
