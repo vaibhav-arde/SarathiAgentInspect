@@ -1,0 +1,47 @@
+<USER_REQUEST>
+I want you to analyse below prompts and then work on  them iteratively phase wise. if all good do your own commits with valid messges push to github as well
+use subagents wherever needed to save tokens and build robust code
+DO not assume anything ask for decisions.
+Master Prompt Strategy for Building an Enterprise AI Evaluation Framework
+
+You should NOT try to build the full framework in one shot.
+
+The correct enterprise approach is:
+
+Build in Phases
+
+Validate Each Phase
+
+Freeze Architecture
+
+Then Move Forward
+
+This avoids:
+
+* architecture collapse
+* technical debt
+* inconsistent abstractions
+* evaluator duplication
+* flaky test execution
+* broken CI later
+* incompatible datasets
+* poor scalability
+
+The prompts below are intentionally designed for:
+
+* ChatGPT
+* Claude
+* Cursor
+* Windsurf
+* Copilot
+* Cline
+* RooCode
+* Devin-like agents
+
+These prompts force coding assistants to:
+
+* think architecturally
+* avoid shortcuts
+* generate production-grade code
+* maintain consistency
+<truncated 14689 bytes>
