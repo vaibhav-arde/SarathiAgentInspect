@@ -33,9 +33,11 @@ class NotifierRegistry:
     @classmethod
     def register(cls, name: str) -> Any:
         """Register a notifier class."""
+
         def decorator(notifier_cls: type[BaseNotifier]) -> type[BaseNotifier]:
             cls._registry[name.lower()] = notifier_cls
             return notifier_cls
+
         return decorator
 
     @classmethod

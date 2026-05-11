@@ -21,10 +21,7 @@ class HTMLReporter(BaseReporter):
         self.output_path = Path(output_path)
         # Assuming template is in the same package
         template_dir = Path(__file__).parent / "templates"
-        self.env = Environment(
-            loader=FileSystemLoader(template_dir),
-            autoescape=True
-        )
+        self.env = Environment(loader=FileSystemLoader(template_dir), autoescape=True)
 
     def generate(self, results: list[Any], summary: EvaluationSummary) -> Path:
         """Generate an HTML report file."""

@@ -40,14 +40,14 @@ class GitHubPRCommenter:
         trend_md = ""
         if trend:
             direction = "⬆️" if trend.get("trend_direction") == "up" else "⬇️"
-            trend_md = f"| **Trend** | {direction} {trend.get('pass_rate_delta', 0)*100:.1f}% |"
+            trend_md = f"| **Trend** | {direction} {trend.get('pass_rate_delta', 0) * 100:.1f}% |"
 
         body = f"""
 ## Sarathi Evaluation Summary {status_emoji}
 
 | Metric | Value |
 | :--- | :--- |
-| **Pass Rate** | {summary.pass_rate*100:.1f}% |
+| **Pass Rate** | {summary.pass_rate * 100:.1f}% |
 | **Total Records** | {summary.total_records} |
 | **Passed** | {summary.passed_count} |
 | **Failed** | {summary.failed_count} |

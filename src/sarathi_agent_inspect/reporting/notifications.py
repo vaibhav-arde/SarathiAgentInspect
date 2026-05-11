@@ -45,7 +45,7 @@ class SlackNotifier(BaseNotifier):
         trend_text = ""
         if trend:
             direction = "📈" if trend.get("trend_direction") == "up" else "📉"
-            trend_text = f"\n*Trend*: {direction} {trend.get('pass_rate_delta', 0)*100:.1f}% change"
+            trend_text = f"\n*Trend*: {direction} {trend.get('pass_rate_delta', 0) * 100:.1f}% change"
 
         blocks = [
             {
@@ -84,6 +84,7 @@ class TeamsNotifier(BaseNotifier):
     def send_summary(self, summary: EvaluationSummary, trend: dict[str, Any] | None = None) -> None:
         """Send a message to Teams (blocking wrapper for adaptive cards)."""
         import asyncio
+
         asyncio.run(self._send_summary_async(summary))
 
     async def _send_summary_async(self, summary: EvaluationSummary) -> None:
@@ -107,17 +108,20 @@ class TeamsNotifier(BaseNotifier):
                                 "text": f"Pass Rate: {(summary.pass_rate * 100):.1f}%",
                                 "color": "Good" if summary.pass_rate >= 0.8 else "Attention",
                             },
-                            {"type": "FactSet", "facts": [
-                                {"title": "Total Records", "value": str(summary.total_records)},
-                                {"title": "Cost", "value": f"${summary.metadata.total_cost_usd:.4f}"},
-                                {"title": "Environment", "value": summary.metadata.environment}
-                            ]}
+                            {
+                                "type": "FactSet",
+                                "facts": [
+                                    {"title": "Total Records", "value": str(summary.total_records)},
+                                    {"title": "Cost", "value": f"${summary.metadata.total_cost_usd:.4f}"},
+                                    {"title": "Environment", "value": summary.metadata.environment},
+                                ],
+                            },
                         ],
                         "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
-                        "version": "1.4"
-                    }
+                        "version": "1.4",
+                    },
                 }
-            ]
+            ],
         }
 
         async with httpx.AsyncClient() as client:

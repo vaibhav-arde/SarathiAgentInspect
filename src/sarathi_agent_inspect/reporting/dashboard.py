@@ -22,10 +22,7 @@ class DashboardGenerator:
     def __init__(self, output_path: str | Path) -> None:
         self.output_path = Path(output_path)
         template_dir = Path(__file__).parent / "templates"
-        self.env = Environment(
-            loader=FileSystemLoader(template_dir),
-            autoescape=True
-        )
+        self.env = Environment(loader=FileSystemLoader(template_dir), autoescape=True)
 
     def generate(self, history: list[EvaluationSummary]) -> Path:
         """Generate the dashboard from historical data."""

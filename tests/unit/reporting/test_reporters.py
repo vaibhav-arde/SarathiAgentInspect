@@ -79,7 +79,7 @@ def test_trend_analyzer(sample_summary: EvaluationSummary) -> None:
             failed_count=3,
             pass_rate=0.7,
             average_score=0.75,
-            metadata=ReportMetadata(run_id="old_run", total_cost_usd=0.04)
+            metadata=ReportMetadata(run_id="old_run", total_cost_usd=0.04),
         )
     ]
 
