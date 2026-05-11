@@ -20,9 +20,9 @@ jobs:
         run: uv run pytest tests/ -m "slow" --alluredir=allure-results
         env:
           SARATHI_ENV: ci
-          SARATHI_PROVIDER__OLLAMA__BASE_URL: ${{ secrets.OLLAMA_BASE_URL }}
-          SARATHI_PROVIDER__OLLAMA__MODEL: ${{ vars.OLLAMA_MODEL || 'gemma4:31b-cloud' }}
-          SARATHI_JUDGE__MODEL: ${{ vars.JUDGE_MODEL || 'gemma4:31b-cloud' }}
+          OLLAMA_BASE_URL: ${{ secrets.OLLAMA_BASE_URL }}
+          OLLAMA_MODEL: ${{ vars.OLLAMA_MODEL || 'gemma4:31b-cloud' }}
+          SARATHI_JUDGE_MODEL: ${{ vars.JUDGE_MODEL || 'gemma4:31b-cloud' }}
           
       - name: Generate Allure Report
         if: always()
