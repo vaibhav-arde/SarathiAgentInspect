@@ -43,7 +43,9 @@ class QualityGate:
         if summary.pass_rate < config.min_pass_rate:
             return GateResult(
                 passed=False,
-                reason=f"Pass rate {(summary.pass_rate * 100):.1f}% is below threshold {(config.min_pass_rate * 100):.1f}%",
+                reason=(
+                    f"Pass rate {(summary.pass_rate * 100):.1f}% is below threshold {(config.min_pass_rate * 100):.1f}%"
+                ),
                 metrics={"pass_rate": summary.pass_rate},
             )
 
